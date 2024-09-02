@@ -86,7 +86,7 @@ function createMarker(value) {
                             <img src="${img.url}" alt="Image" class="img_gallery" style="max-width: 100%; margin-bottom: 10px;">
                             <div class="caption">
                                 <a href="https://museris.lausanne.ch/SGCM/Consultation.aspx?id=${imgId}&Source=search_result.aspx" target="_blank" class="more-info-link">
-                                    More information
+                                    Plus d'informations
                                 </a>
                                 <br>${img.description}
                             </div>
