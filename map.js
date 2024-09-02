@@ -2,12 +2,6 @@
 var map = L.map('map').setView([46.522935, 6.6322734], 13);
 map.zoomControl.setPosition('bottomright');
 
-// L.tileLayer.provider('Stadia.StamenWatercolor').addTo(map);
-
-// L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-//     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-
-// }).addTo(map);
 L.tileLayer('https://tiles.stadiamaps.com/tiles/alidade_smooth/{z}/{x}/{y}{r}.{ext}', {
 	minZoom: 0,
 	maxZoom: 20,
@@ -94,19 +88,22 @@ function createMarker(value) {
 
     if (yearOptions) {
         marker.on('click', function() {
-            // Update the gallery panel with the year selector and images
-            document.getElementById("gallery").innerHTML = `
+            // Show the overlay
+            document.getElementById("overlay").style.display = "block";
+
+            // Update the overlay content with the year selector and images
+            document.getElementById("overlay-gallery").innerHTML = `
                 <div>
                     <label for="year-select">Select Year:</label>
-                    <select id="year-select" onchange="updateGalleryContent('${value.title}')">
+                    <select id="year-select" onchange="updateOverlayGalleryContent('${value.title}')">
                         ${yearOptions}
                     </select>
                 </div>
-                <div id="year-gallery"></div>
+                <div id="overlay-year-gallery"></div>
             `;
 
             // Show the gallery content for the initially selected year
-            document.getElementById("year-gallery").innerHTML = galleryContentByYear[document.getElementById("year-select").value];
+            document.getElementById("overlay-year-gallery").innerHTML = galleryContentByYear[document.getElementById("year-select").value];
 
             // Store the content by year for easy access during year change
             window.galleryContentByYear = galleryContentByYear;
@@ -116,11 +113,40 @@ function createMarker(value) {
     }
 }
 
-// Function to update gallery content when a year is selected
-function updateGalleryContent(markerTitle) {
+// Function to update overlay gallery content when a year is selected
+function updateOverlayGalleryContent(markerTitle) {
     const selectedYear = document.getElementById("year-select").value;
-    document.getElementById("year-gallery").innerHTML = window.galleryContentByYear[selectedYear];
+    document.getElementById("overlay-year-gallery").innerHTML = window.galleryContentByYear[selectedYear];
 }
+
+// Close the overlay when the close button is clicked
+document.getElementById("close-overlay").onclick = function() {
+    document.getElementById("overlay").style.display = "none";
+};
 
 // Adjust the map to fit all markers
 map.fitBounds(markers.getBounds());
+
+// Function to close the overlay
+function closeOverlay() {
+    document.getElementById("overlay").style.display = "none";
+}
+
+// Close the overlay when the close button is clicked
+document.getElementById("close-overlay").onclick = function() {
+    closeOverlay();
+};
+
+// Close the overlay when clicking outside of the overlay content
+document.getElementById("overlay").onclick = function(event) {
+    if (event.target === document.getElementById("overlay")) {
+        closeOverlay();
+    }
+};
+
+// Close the overlay when pressing the Esc key
+document.addEventListener("keydown", function(event) {
+    if (event.key === "Escape") {
+        closeOverlay();
+    }
+});

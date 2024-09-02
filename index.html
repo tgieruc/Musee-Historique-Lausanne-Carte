@@ -7,17 +7,12 @@
     <meta name="description" content="">
     <title>MHL - Carte</title>
 
-
-
-
     <link href="nouislider.css" rel="stylesheet">
     <script src="nouislider.js"></script>
     <script src="js/wNumb.js"></script>
 
-
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <script src="https://unpkg.com/leaflet@latest/dist/leaflet.js"></script>
-    <script src="https://unpkg.com/leaflet-providers@latest/leaflet-providers.js"></script>
+
     <link rel="stylesheet" href="map.css" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"
         integrity="sha512-xodZBNTC5n17Xt2atTPuE1HxjVMSvLVW9ocqUKLsCC5CXdbqCmblAshOMAS6/keqq/sMZMZ19scR4PsZChSR7A=="
@@ -34,11 +29,11 @@
     <!-- Leaflet Locate Control JS -->
     <script src="https://unpkg.com/leaflet.locatecontrol/dist/L.Control.Locate.min.js"></script>
 
-
     <!--  Database-->
     <script src="data.js"></script>
+</head>
 
-
+<body>
     <header style="background-color: #333; padding: 10px; text-align: center;">
         <a href="https://github.com/tgieruc/Musee-Historique-Lausanne-Carte" 
            style="color: white; text-decoration: none; font-size: 18px;">
@@ -55,15 +50,16 @@
             <div id="map"></div>
         </div>
 
-        <div id="image-panel">
-            <div id="gallery">
-                <p>Select a marker on the map to view an image here.</p>
+        <!-- Overlay -->
+        <div id="overlay" class="overlay">
+            <div class="overlay-content">
+                <button id="close-overlay" class="close-button">&times;</button>
+                <div id="overlay-gallery"></div>
             </div>
         </div>
     </section>
 
-    </body>
+    <script src="map.js"></script>
+</body>
 
 </html>
-
-<script src="map.js"></script>
