@@ -104,7 +104,7 @@ function createMarker(value) {
             // Update the overlay content with the year selector and images
             document.getElementById("overlay-gallery").innerHTML = `
                 <div>
-                    <label for="year-select">Select Year:</label>
+                    <label for="year-select">Choisir l'anné:</label>
                     <select id="year-select" onchange="updateOverlayGalleryContent('${value.title}')">
                         ${yearOptions}
                     </select>
