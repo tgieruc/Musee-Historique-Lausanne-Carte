@@ -65,7 +65,6 @@ var markers = L.markerClusterGroup();
 json.forEach(createMarker);
 map.addLayer(markers);
 
-// Function to create a marker
 function createMarker(value) {
     var marker = L.marker(new L.LatLng(value.latitude, value.longitude), { title: value.title });
     var yearOptions = '';
@@ -77,11 +76,22 @@ function createMarker(value) {
             galleryContentByYear[year_elem.year] = '';
 
             year_elem.images.forEach(img => {
-                galleryContentByYear[year_elem.year] += `
-                    <div class="image">
-                        <img src="${img.url}" alt="Image" class="img_gallery" style="max-width: 100%; margin-bottom: 10px;">
-                        <div class="caption"><strong>${img.id}</strong><br>${img.description}</div>
-                    </div>`;
+                // Extract the ID from the img.url
+                var imgIdMatch = img.url.match(/id=(\d+)/);
+                var imgId = imgIdMatch ? imgIdMatch[1] : null;
+
+                if (imgId) {
+                    galleryContentByYear[year_elem.year] += `
+                        <div class="image"  style="text-align: center;">
+                            <img src="${img.url}" alt="Image" class="img_gallery" style="max-width: 100%; margin-bottom: 10px;">
+                            <div class="caption">
+                                <a href="https://museris.lausanne.ch/SGCM/Consultation.aspx?id=${imgId}&Source=search_result.aspx" target="_blank" class="more-info-link">
+                                    More information
+                                </a>
+                                <br>${img.description}
+                            </div>
+                        </div>`;
+                }
             });
         }
     });
@@ -112,6 +122,8 @@ function createMarker(value) {
         markers.addLayer(marker);
     }
 }
+
+
 
 // Function to update overlay gallery content when a year is selected
 function updateOverlayGalleryContent(markerTitle) {

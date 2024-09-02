@@ -55,6 +55,8 @@ body {
     display: none; /* Hidden by default */
     z-index: 1000; /* Ensure it stays above everything else */
     overflow-y: auto; /* Enable scrolling if content is too tall */
+
+
 }
 
 .overlay-content {
@@ -68,6 +70,8 @@ body {
     overflow: auto; /* Scroll inside if content overflows */
 }
 
+
+
 .close-button {
     position: absolute;
     top: 10px;
@@ -77,6 +81,9 @@ body {
     font-size: 30px;
     color: #000;
     cursor: pointer;
+    justify-content: center;
+    align-items: center;
+    display: flex;
 }
 
 .close-button:hover {
@@ -94,3 +101,5 @@ body {
         height: 100%; /* Adjust the height to cover full screen */
     }
 }
+
+
