@@ -39,33 +39,28 @@
 
 <svelte:window onkeydown={handleKeydown} />
 
-<div class="py-2">
-	<div
-		class="flex gap-4 overflow-x-auto pb-3 scroll-snap-x"
-		style="scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch;"
-	>
-		{#each images as image, i}
-			<button
-				class="flex-shrink-0 w-[200px] md:w-[250px] rounded-lg overflow-hidden bg-parchment-dark/60 shadow-sm hover:shadow-md transition-shadow duration-200 cursor-pointer text-left border border-sepia-light/20"
-				style="scroll-snap-align: start; animation: cardFadeIn 0.4s ease-out {i * 100}ms both;"
-				onclick={() => openLightbox(i)}
-			>
-				<div class="w-full aspect-[4/3] overflow-hidden bg-parchment-dark">
-					<img
-						src={image.url}
-						alt={image.description || `Image ${i + 1}`}
-						loading="lazy"
-						class="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
-					/>
-				</div>
-				<div class="p-3">
-					<p class="font-body text-sm text-ink/80 line-clamp-2 leading-snug">
-						{image.description || 'Sans description'}
-					</p>
-				</div>
-			</button>
-		{/each}
-	</div>
+<div class="py-2 flex flex-col gap-4">
+	{#each images as image, i}
+		<button
+			class="w-full rounded-lg overflow-hidden bg-parchment-dark/60 shadow-sm hover:shadow-md transition-shadow duration-200 cursor-pointer text-left border border-sepia-light/20"
+			style="animation: cardFadeIn 0.4s ease-out {i * 80}ms both;"
+			onclick={() => openLightbox(i)}
+		>
+			<div class="w-full overflow-hidden bg-parchment-dark">
+				<img
+					src={image.url}
+					alt={image.description || `Image ${i + 1}`}
+					loading="lazy"
+					class="w-full h-auto object-contain transition-transform duration-300 hover:scale-105"
+				/>
+			</div>
+			<div class="p-3">
+				<p class="font-body text-sm text-ink/80 line-clamp-3 leading-snug">
+					{image.description || 'Sans description'}
+				</p>
+			</div>
+		</button>
+	{/each}
 </div>
 
 {#if lightboxIndex !== null}

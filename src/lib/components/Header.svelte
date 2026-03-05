@@ -37,24 +37,19 @@
 	});
 </script>
 
-<header class="bg-parchment border-b border-parchment-dark px-4 py-3 md:px-6 md:py-4 font-body">
-	<div class="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center gap-3 md:gap-8">
+<header class="bg-parchment border-b border-parchment-dark px-3 py-1.5 md:px-4 md:py-2 font-body">
+	<div class="max-w-7xl mx-auto flex items-center gap-4 md:gap-6">
 		<!-- Title -->
-		<h1 class="font-display text-ink text-xl md:text-2xl tracking-tight whitespace-nowrap">
+		<h1 class="font-display text-ink text-base md:text-lg tracking-tight whitespace-nowrap">
 			Musée Historique de Lausanne
 		</h1>
 
 		<!-- Slider section -->
-		<div class="flex-1 flex flex-col gap-1 max-w-xl">
-			<!-- Year display -->
-			<div class="flex items-baseline justify-center gap-2">
-				<span class="font-display text-sepia text-lg md:text-xl tabular-nums">{localMin}</span>
-				<span class="text-sepia-light text-sm tracking-widest">&mdash;</span>
-				<span class="font-display text-sepia text-lg md:text-xl tabular-nums">{localMax}</span>
-			</div>
+		<div class="flex-1 flex items-center gap-3 max-w-xl">
+			<span class="font-display text-sepia text-sm tabular-nums">{localMin}</span>
 
 			<!-- Dual range slider -->
-			<div class="range-slider relative h-8 flex items-center">
+			<div class="range-slider relative h-6 flex-1 flex items-center">
 				<!-- Track background -->
 				<div class="absolute inset-x-0 h-1 rounded-full bg-parchment-dark"></div>
 				<!-- Active track -->
@@ -83,6 +78,8 @@
 					aria-label="End year"
 				/>
 			</div>
+
+			<span class="font-display text-sepia text-sm tabular-nums">{localMax}</span>
 		</div>
 	</div>
 </header>

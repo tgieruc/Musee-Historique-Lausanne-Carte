@@ -8,7 +8,7 @@
 
 	let mapContainer = $state(null);
 	let map = $state(null);
-	let allData = $state([]);
+	let allData = { current: [] };
 
 	function buildGeoJSON(data, min, max) {
 		const features = data
@@ -38,12 +38,12 @@
 	}
 
 	function updateSource() {
-		if (!map || !allData.length) return;
+		if (!map || !allData.current.length) return;
 		const source = map.getSource('locations');
 		if (!source) return;
 		const min = get(minYear);
 		const max = get(maxYear);
-		source.setData(buildGeoJSON(allData, min, max));
+		source.setData(buildGeoJSON(allData.current, min, max));
 	}
 
 	onMount(() => {
@@ -60,7 +60,7 @@
 		m.on('load', async () => {
 			const res = await fetch(`${base}/data.json`);
 			const data = await res.json();
-			allData = data;
+			allData.current = data;
 
 			const min = get(minYear);
 			const max = get(maxYear);
@@ -113,23 +113,26 @@
 			});
 
 			// Click on cluster to zoom
-			m.on('click', 'clusters', (e) => {
+			m.on('click', 'clusters', async (e) => {
 				const features = m.queryRenderedFeatures(e.point, { layers: ['clusters'] });
 				const clusterId = features[0].properties.cluster_id;
-				m.getSource('locations').getClusterExpansionZoom(clusterId, (err, zoom) => {
-					if (err) return;
+				try {
+					const zoom = await m.getSource('locations').getClusterExpansionZoom(clusterId);
 					m.easeTo({
 						center: features[0].geometry.coordinates,
 						zoom: zoom
 					});
-				});
+				} catch (err) {
+					// ignore
+				}
 			});
 
 			// Click on individual marker
 			m.on('click', 'unclustered-point', (e) => {
+				e.originalEvent?.stopPropagation?.();
 				const feature = e.features[0];
 				const idx = feature.properties.index;
-				const loc = allData[idx];
+				const loc = allData.current[idx];
 				if (loc) {
 					selectedLocation.set(loc);
 				}
@@ -161,10 +164,10 @@
 	$effect(() => {
 		const min = $minYear;
 		const max = $maxYear;
-		if (map && allData.length) {
+		if (map && allData.current.length) {
 			const source = map.getSource('locations');
 			if (source) {
-				source.setData(buildGeoJSON(allData, min, max));
+				source.setData(buildGeoJSON(allData.current, min, max));
 			}
 		}
 	});

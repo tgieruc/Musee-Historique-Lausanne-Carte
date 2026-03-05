@@ -130,8 +130,8 @@
 {:else}
 	<!-- Desktop: side panel from right -->
 	<div
-		class="absolute top-0 right-0 bottom-0 z-20 w-[400px] bg-parchment shadow-2xl border-l border-sepia-light/30"
-		transition:fly={{ x: 400, duration: 300 }}
+		class="absolute top-0 right-0 bottom-0 z-20 w-[500px] bg-parchment shadow-2xl border-l border-sepia-light/30"
+		transition:fly={{ x: 500, duration: 300 }}
 	>
 		<div class="p-6 overflow-y-auto h-full">
 			<!-- Close button -->
