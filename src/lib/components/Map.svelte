@@ -170,4 +170,4 @@
 	});
 </script>
 
-<div bind:this={mapContainer} class="absolute inset-0"></div>
+<div bind:this={mapContainer} class="absolute inset-0" style="width: 100%; height: 100%;"></div>
