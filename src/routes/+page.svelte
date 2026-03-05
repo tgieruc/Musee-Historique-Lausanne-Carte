@@ -1,2 +1,10 @@
-<h1>Welcome to SvelteKit</h1>
-<p>Visit <a href="https://svelte.dev/docs/kit">svelte.dev/docs/kit</a> to read the documentation</p>
+<script>
+	import Header from '$lib/components/Header.svelte';
+</script>
+
+<div class="h-screen flex flex-col bg-parchment">
+	<Header />
+	<div class="flex-1">
+		<!-- Map will go here -->
+	</div>
+</div>
