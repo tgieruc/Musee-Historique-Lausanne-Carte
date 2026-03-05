@@ -93,6 +93,13 @@
 				&times;
 			</button>
 
+			<!-- Image counter -->
+			{#if images.length > 1}
+				<p class="font-body text-sm text-sepia-light mb-2 tabular-nums">
+					{lightboxIndex + 1} / {images.length}
+				</p>
+			{/if}
+
 			<!-- Image -->
 			<img
 				src={images[lightboxIndex].url}

@@ -93,9 +93,13 @@
 			</div>
 
 			<!-- Title -->
-			<h2 class="font-display text-xl text-ink mb-4">
-				Lieu #{location?.title}
-			</h2>
+			{#if selectedYear}
+				<h2 class="font-display text-xl text-ink">{selectedYear}</h2>
+				<p class="font-body text-sm text-sepia mt-0.5 mb-3">Images historiques</p>
+			{:else}
+				<h2 class="font-display text-xl text-ink mb-3">Images historiques</h2>
+			{/if}
+			<hr class="border-t border-sepia-light/40 mb-4" />
 
 			<!-- Year pills -->
 			{#if filteredYears.length > 0}
@@ -144,9 +148,13 @@
 			</div>
 
 			<!-- Title -->
-			<h2 class="font-display text-2xl text-ink mb-5">
-				Lieu #{location?.title}
-			</h2>
+			{#if selectedYear}
+				<h2 class="font-display text-2xl text-ink">{selectedYear}</h2>
+				<p class="font-body text-sm text-sepia mt-1 mb-4">Images historiques</p>
+			{:else}
+				<h2 class="font-display text-2xl text-ink mb-4">Images historiques</h2>
+			{/if}
+			<hr class="border-t border-sepia-light/40 mb-5" />
 
 			<!-- Year pills -->
 			{#if filteredYears.length > 0}

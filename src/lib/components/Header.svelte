@@ -41,7 +41,7 @@
 	<div class="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center gap-3 md:gap-8">
 		<!-- Title -->
 		<h1 class="font-display text-ink text-xl md:text-2xl tracking-tight whitespace-nowrap">
-			Musee Historique de Lausanne
+			Musée Historique de Lausanne
 		</h1>
 
 		<!-- Slider section -->
