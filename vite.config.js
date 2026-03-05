@@ -1,7 +1,36 @@
 import { sveltekit } from '@sveltejs/kit/vite';
 import tailwindcss from '@tailwindcss/vite';
+import { SvelteKitPWA } from '@vite-pwa/sveltekit';
 import { defineConfig } from 'vite';
 
 export default defineConfig({
-	plugins: [sveltekit(), tailwindcss()]
+	plugins: [
+		sveltekit(),
+		tailwindcss(),
+		SvelteKitPWA({
+			registerType: 'autoUpdate',
+			manifest: {
+				name: 'Musée Historique de Lausanne - Carte',
+				short_name: 'MHL Carte',
+				description: 'Carte interactive des images historiques de Lausanne',
+				theme_color: '#f5f0e8',
+				background_color: '#f5f0e8',
+				display: 'standalone',
+				scope: '/Musee-Historique-Lausanne-Carte/',
+				start_url: '/Musee-Historique-Lausanne-Carte/',
+				icons: [
+					{
+						src: 'favicon.svg',
+						sizes: 'any',
+						type: 'image/svg+xml',
+						purpose: 'any'
+					}
+				]
+			},
+			workbox: {
+				globPatterns: ['**/*.{js,css,html,json,svg,png}'],
+				maximumFileSizeToCacheInBytes: 6 * 1024 * 1024
+			}
+		})
+	]
 });
