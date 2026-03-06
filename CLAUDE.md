@@ -1,40 +1,59 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
-
 ## Project Overview
 
-Interactive map displaying historical images from the Musée Historique Lausanne (MHL) on a Leaflet map. Users can explore geolocalized historical images of Lausanne and filter them by year range. Deployed as a static site on GitHub Pages.
+Interactive map displaying historical images from the Musee Historique Lausanne (MHL). Users explore geolocalized historical images of Lausanne and filter them by year range. UI is in French.
 
-Live site: https://tgieruc.github.io/Musee-Historique-Lausanne-Carte/
+Live site: https://theogieruc.dev/mhl-carte
+
+## Tech Stack
+
+- **SvelteKit** (Svelte 5) with `@sveltejs/adapter-static`
+- **MapLibre GL JS** — CARTO Dark Matter basemap, GeoJSON clustering
+- **Tailwind CSS v4** — via `@tailwindcss/vite` plugin
+- **PWA** — `@vite-pwa/sveltekit` with service worker and manifest
+- **Vite 7**
 
 ## Development
 
-No build step — this is a vanilla HTML/CSS/JS project. Open `index.html` directly in a browser or use any local server (e.g., `python3 -m http.server`).
+```bash
+npm install
+npm run dev      # local dev server
+npm run build    # static build to build/
+npm run preview  # preview production build
+```
 
-Deployment is automatic via GitHub Actions (`.github/workflows/static.yml`) on push to `main`.
+## Deployment
+
+This repo is used as a **git submodule** inside the Astro site at `/Users/tgieruc/Documents/theogieruc.dev`. The built output is served as a static subfolder at `/mhl-carte`. Base path is configured in `svelte.config.js`.
 
 ## Architecture
 
-- **`index.html`** — Single-page app entry point. Loads all dependencies via `<script>` and `<link>` tags (no bundler).
-- **`js/map.js`** — Core application logic: initializes Leaflet map centered on Lausanne, creates marker clusters, manages the year range slider (noUiSlider), and handles the image overlay popup.
-- **`js/data.js`** — Contains the entire dataset as a global `json` array. Each entry has `title`, `latitude`, `longitude`, and a `years` array containing year-grouped `images` (each with `id`, `url`, `description`). Images are hosted on the MHL Museris server.
-- **`css/map.css`** — App styles including the overlay modal and responsive layout.
+### Config
 
-### Third-party libraries (vendored in repo)
+- **`svelte.config.js`** — adapter-static, base path `/mhl-carte`
+- **`vite.config.js`** — SvelteKit + Tailwind + PWA plugins
+- **`src/app.css`** — Tailwind import + custom theme (terminal aesthetic: black bg, cyan/gold accents, monospace font, CRT scanlines)
+- **`src/app.html`** — HTML shell
 
-- **Leaflet** (v1.7.1) — loaded from unpkg CDN
-- **Leaflet.markercluster** — vendored in `dist/` (MarkerCluster CSS + JS)
-- **Leaflet.locatecontrol** — loaded from unpkg CDN (geolocation button)
-- **noUiSlider** + **wNumb** — vendored in `js/` (year range slider)
+### Source (`src/`)
+
+- **`src/routes/+page.svelte`** — Single page: Header + Map + conditional Drawer
+- **`src/lib/components/Map.svelte`** — MapLibre GL map, GeoJSON source with clustering, marker click handling, year-range filtering
+- **`src/lib/components/Header.svelte`** — App header with year range slider
+- **`src/lib/components/Drawer.svelte`** — Side drawer showing location details and images
+- **`src/lib/components/ImageGallery.svelte`** — Image gallery within the drawer
+- **`src/lib/stores/map.js`** — Svelte stores: `minYear`, `maxYear`, `selectedLocation`
+
+### Static assets (`static/`)
+
+- **`static/data.json`** — Full dataset. Each entry has `title`, `latitude`, `longitude`, and a `years` array containing year-grouped `images` (each with `id`, `url`, `description`). Images hosted on MHL Museris server.
+- **`static/favicon.svg`**
 
 ### Key data flow
 
-1. `js/data.js` defines the global `json` array (loaded before `map.js`)
-2. `map.js` iterates over `json` to create clustered Leaflet markers filtered by the current year range
-3. Clicking a marker opens an overlay showing images for that location, with a year dropdown to switch between available years
-4. The noUiSlider `update` event triggers `update_map()` which clears and re-creates all markers
-
-## Language
-
-The UI is in French (labels, links, descriptions). Image descriptions come from the museum's French-language database.
+1. `Map.svelte` fetches `data.json` on mount
+2. Builds a GeoJSON FeatureCollection filtered by current year range from stores
+3. MapLibre renders clustered point markers; clicking a marker sets `selectedLocation` store
+4. `Drawer.svelte` reacts to the store and displays images for that location
+5. `Header.svelte` contains the year range slider that updates `minYear`/`maxYear` stores, triggering map re-filter

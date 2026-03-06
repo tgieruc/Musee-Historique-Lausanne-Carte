@@ -9,6 +9,10 @@
 		"preview": "vite preview",
 		"prepare": "svelte-kit sync || echo ''"
 	},
+	"overrides": {
+		"cookie": ">=0.7.0",
+		"serialize-javascript": ">=7.0.3"
+	},
 	"devDependencies": {
 		"@sveltejs/adapter-auto": "^7.0.0",
 		"@sveltejs/adapter-static": "^3.0.10",
