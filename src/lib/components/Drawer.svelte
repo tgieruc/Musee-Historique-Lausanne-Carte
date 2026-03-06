@@ -58,9 +58,7 @@
 <!-- Panel -->
 <div
 	class="absolute z-20 bg-terminal-bg border-terminal-border shadow-[0_0_20px_rgba(0,255,255,0.08)]
-		{isMobile
-		? 'bottom-0 left-0 right-0 border-t'
-		: 'top-0 right-0 bottom-0 w-[480px] border-l'}"
+		{isMobile ? 'bottom-0 left-0 right-0 border-t' : 'top-0 right-0 bottom-0 w-[480px] border-l'}"
 	style={isMobile ? 'height: 80vh;' : ''}
 	transition:fly={isMobile ? { y: 300, duration: 250 } : { x: 480, duration: 250 }}
 >
@@ -71,11 +69,16 @@
 		</div>
 	{/if}
 
-	<div class="px-4 pb-4 overflow-y-auto {isMobile ? 'pt-1' : 'pt-4'}" style="height: {isMobile ? 'calc(100% - 1.5rem)' : '100%'};">
+	<div
+		class="px-4 pb-4 overflow-y-auto {isMobile ? 'pt-1' : 'pt-4'}"
+		style="height: {isMobile ? 'calc(100% - 1.5rem)' : '100%'};"
+	>
 		<!-- Header row -->
 		<div class="flex items-start justify-between mb-3">
 			<div>
-				<p class="text-xs text-text-dim uppercase tracking-widest font-mono">{totalImages} image{totalImages !== 1 ? 's' : ''}</p>
+				<p class="text-xs text-text-dim uppercase tracking-widest font-mono">
+					{totalImages} image{totalImages !== 1 ? 's' : ''}
+				</p>
 				{#if filteredYears.length === 1}
 					<h2 class="text-2xl text-accent-gold font-mono font-semibold leading-tight">{filteredYears[0].year}</h2>
 				{:else if filteredYears.length > 1}
@@ -91,7 +94,14 @@
 				onclick={close}
 				aria-label="Fermer"
 			>
-				<svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+				<svg
+					xmlns="http://www.w3.org/2000/svg"
+					class="w-4 h-4"
+					fill="none"
+					viewBox="0 0 24 24"
+					stroke="currentColor"
+					stroke-width="2.5"
+				>
 					<path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
 				</svg>
 			</button>
@@ -100,7 +110,7 @@
 		<!-- Year pills -->
 		{#if filteredYears.length > 1}
 			<div class="flex flex-wrap gap-1.5 mb-4">
-				{#each filteredYears as yearData}
+				{#each filteredYears as yearData (yearData.year)}
 					<button
 						class="px-2.5 py-1 text-xs font-mono transition-all duration-150 cursor-pointer border
 							{yearData.year === selectedYear
@@ -116,15 +126,13 @@
 		{/if}
 
 		{#if filteredYears.length === 0}
-			<p class="text-sm text-text-dim italic font-mono">
-				Aucune image pour cette periode.
-			</p>
+			<p class="text-sm text-text-dim italic font-mono">Aucune image pour cette periode.</p>
 		{/if}
 
 		<!-- Gallery -->
 		{#if selectedYearImages.length > 0 && selectedYear}
 			{#key selectedYear}
-				<ImageGallery images={selectedYearImages} year={selectedYear} />
+				<ImageGallery images={selectedYearImages} />
 			{/key}
 		{/if}
 	</div>

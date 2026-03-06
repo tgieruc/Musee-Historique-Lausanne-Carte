@@ -152,7 +152,9 @@
 						zoom: zoom,
 						duration: 500
 					});
-				} catch (_) {}
+				} catch {
+					/* cluster may have been removed */
+				}
 			});
 
 			// Click marker -> open drawer (use hit target for easier tapping)
@@ -201,12 +203,12 @@
 		border-radius: 0 !important;
 		box-shadow: 0 0 8px rgba(0, 255, 255, 0.15) !important;
 		border: 1px solid #333 !important;
-		background: #0A0A0A !important;
+		background: #0a0a0a !important;
 	}
 	:global(.maplibregl-ctrl-group button) {
 		width: 32px !important;
 		height: 32px !important;
-		background-color: #0A0A0A !important;
+		background-color: #0a0a0a !important;
 		border-bottom-color: #333 !important;
 	}
 	:global(.maplibregl-ctrl-group button:hover) {
@@ -219,10 +221,10 @@
 		font-size: 10px !important;
 		font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace !important;
 		background: rgba(0, 0, 0, 0.8) !important;
-		color: #8A8A8A !important;
+		color: #8a8a8a !important;
 		backdrop-filter: blur(4px) !important;
 	}
 	:global(.maplibregl-ctrl-attrib a) {
-		color: #8A8A8A !important;
+		color: #8a8a8a !important;
 	}
 </style>

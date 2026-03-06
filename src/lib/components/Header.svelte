@@ -37,16 +37,28 @@
 	});
 </script>
 
-<header class="bg-terminal-bg/95 backdrop-blur-sm border-b border-terminal-border px-3 py-2 md:px-5 md:py-2.5 font-mono relative z-30">
+<header
+	class="bg-terminal-bg/95 backdrop-blur-sm border-b border-terminal-border px-3 py-2 md:px-5 md:py-2.5 font-mono relative z-30"
+>
 	<div class="flex items-center gap-3 md:gap-5">
-		<a href="/" class="text-accent-gold text-sm md:text-base tracking-[0.05em] uppercase font-semibold whitespace-nowrap leading-none hover:text-accent-gold no-underline">
+		<a
+			href="/"
+			class="text-accent-gold text-sm md:text-base tracking-[0.05em] uppercase font-semibold whitespace-nowrap leading-none hover:text-accent-gold no-underline"
+		>
 			Theo Gieruc
 		</a>
 
 		<nav class="flex items-center gap-3 md:gap-6">
-			<a href="/" class="text-text-dim text-xs md:text-sm uppercase tracking-[0.08em] hover:text-accent-cyan no-underline">Blog</a>
+			<a
+				href="/"
+				class="text-text-dim text-xs md:text-sm uppercase tracking-[0.08em] hover:text-accent-cyan no-underline">Blog</a
+			>
 			<a href="/mhl-carte/" class="text-accent-cyan text-xs md:text-sm uppercase tracking-[0.08em] no-underline">Map</a>
-			<a href="https://github.com/tgieruc" class="text-text-dim text-xs md:text-sm uppercase tracking-[0.08em] hover:text-accent-cyan no-underline">GitHub</a>
+			<a
+				href="https://github.com/tgieruc"
+				class="text-text-dim text-xs md:text-sm uppercase tracking-[0.08em] hover:text-accent-cyan no-underline"
+				>GitHub</a
+			>
 		</nav>
 
 		<div class="w-px h-4 bg-terminal-border hidden md:block"></div>
@@ -111,7 +123,9 @@
 		box-shadow: 0 0 6px rgba(0, 255, 255, 0.4);
 		cursor: pointer;
 		margin-top: -5px;
-		transition: box-shadow 0.15s ease, background 0.15s ease;
+		transition:
+			box-shadow 0.15s ease,
+			background 0.15s ease;
 	}
 
 	.range-thumb::-moz-range-thumb {
@@ -124,7 +138,9 @@
 		border: 1px solid var(--color-terminal-bg);
 		box-shadow: 0 0 6px rgba(0, 255, 255, 0.4);
 		cursor: pointer;
-		transition: box-shadow 0.15s ease, background 0.15s ease;
+		transition:
+			box-shadow 0.15s ease,
+			background 0.15s ease;
 	}
 
 	.range-thumb::-webkit-slider-thumb:hover,

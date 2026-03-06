@@ -2,16 +2,16 @@
 
 @theme {
 	--color-terminal-bg: #000000;
-	--color-terminal-bg-light: #0A0A0A;
+	--color-terminal-bg-light: #0a0a0a;
 	--color-terminal-border: #333333;
-	--color-text-gold: #E9CC7A;
-	--color-text-bright: #FFF2C2;
-	--color-text-dim: #8A8A8A;
-	--color-accent-cyan: #00FFFF;
-	--color-accent-cyan-hover: #66FFFF;
-	--color-accent-gold: #FFBF00;
-	--color-accent-orange: #FF6600;
-	--color-accent-green: #00A645;
+	--color-text-gold: #e9cc7a;
+	--color-text-bright: #fff2c2;
+	--color-text-dim: #8a8a8a;
+	--color-accent-cyan: #00ffff;
+	--color-accent-cyan-hover: #66ffff;
+	--color-accent-gold: #ffbf00;
+	--color-accent-orange: #ff6600;
+	--color-accent-green: #00a645;
 	--font-mono: 'SF Mono', 'Fira Code', 'Consolas', 'Monaco', monospace;
 }
 
@@ -40,6 +40,6 @@ body::after {
 }
 
 ::selection {
-	background: #003366AA;
-	color: #E9F7FF;
+	background: #003366aa;
+	color: #e9f7ff;
 }

@@ -1,7 +1,7 @@
 <script>
 	import { fade } from 'svelte/transition';
 
-	let { images, year } = $props();
+	let { images } = $props();
 
 	let lightboxIndex = $state(null);
 
@@ -39,7 +39,7 @@
 <svelte:window onkeydown={handleKeydown} />
 
 <div class="flex flex-col gap-3">
-	{#each images as image, i}
+	{#each images as image, i (image.id)}
 		<button
 			class="group w-full overflow-hidden bg-terminal-bg-light border border-terminal-border hover:border-accent-gold/50 transition-all duration-200 cursor-pointer text-left"
 			style="animation: cardFadeIn 0.3s ease-out {i * 60}ms both;"
@@ -84,7 +84,14 @@
 					onclick={closeLightbox}
 					aria-label="Fermer"
 				>
-					<svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+					<svg
+						xmlns="http://www.w3.org/2000/svg"
+						class="w-5 h-5"
+						fill="none"
+						viewBox="0 0 24 24"
+						stroke="currentColor"
+						stroke-width="2"
+					>
 						<path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
 					</svg>
 				</button>
@@ -98,7 +105,14 @@
 						onclick={prevImage}
 						aria-label="Image precedente"
 					>
-						<svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+						<svg
+							xmlns="http://www.w3.org/2000/svg"
+							class="w-5 h-5"
+							fill="none"
+							viewBox="0 0 24 24"
+							stroke="currentColor"
+							stroke-width="2"
+						>
 							<path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
 						</svg>
 					</button>
@@ -116,7 +130,14 @@
 						onclick={nextImage}
 						aria-label="Image suivante"
 					>
-						<svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+						<svg
+							xmlns="http://www.w3.org/2000/svg"
+							class="w-5 h-5"
+							fill="none"
+							viewBox="0 0 24 24"
+							stroke="currentColor"
+							stroke-width="2"
+						>
 							<path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
 						</svg>
 					</button>
@@ -129,7 +150,8 @@
 					{images[lightboxIndex].description || ''}
 				</p>
 				<a
-					href="https://museris.lausanne.ch/SGCM/Consultation.aspx?id={images[lightboxIndex].id}&Source=search_result.aspx"
+					href="https://museris.lausanne.ch/SGCM/Consultation.aspx?id={images[lightboxIndex]
+						.id}&Source=search_result.aspx"
 					target="_blank"
 					rel="noopener noreferrer"
 					class="inline-block mt-2 text-accent-cyan hover:text-accent-cyan-hover text-xs font-mono underline underline-offset-4 decoration-accent-cyan/40 transition-colors"

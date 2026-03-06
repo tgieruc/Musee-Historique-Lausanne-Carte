@@ -15,6 +15,7 @@
 ### Task 1: Scaffold SvelteKit project
 
 **Files:**
+
 - Create: `package.json`, `svelte.config.js`, `vite.config.js`, `tailwind.config.js`, `src/app.html`, `src/app.css`, `src/routes/+layout.svelte`, `src/routes/+page.svelte`
 
 **Step 1: Initialize SvelteKit**
@@ -45,7 +46,7 @@ In `vite.config.js`, add the Tailwind Vite plugin:
 import tailwindcss from '@tailwindcss/vite';
 
 export default defineConfig({
-  plugins: [sveltekit(), tailwindcss()]
+	plugins: [sveltekit(), tailwindcss()]
 });
 ```
 
@@ -67,17 +68,17 @@ In `svelte.config.js`:
 import adapter from '@sveltejs/adapter-static';
 
 export default {
-  kit: {
-    adapter: adapter({
-      pages: 'build',
-      assets: 'build',
-      fallback: undefined,
-      precompress: false
-    }),
-    paths: {
-      base: '/Musee-Historique-Lausanne-Carte'
-    }
-  }
+	kit: {
+		adapter: adapter({
+			pages: 'build',
+			assets: 'build',
+			fallback: undefined,
+			precompress: false
+		}),
+		paths: {
+			base: '/Musee-Historique-Lausanne-Carte'
+		}
+	}
 };
 ```
 
@@ -111,6 +112,7 @@ git commit -m "feat: scaffold SvelteKit project with Tailwind and static adapter
 ### Task 2: Convert data.js to data.json
 
 **Files:**
+
 - Create: `static/data.json`
 - Read: `js/data.js` (reference, do not modify)
 
@@ -155,6 +157,7 @@ git commit -m "feat: convert data.js to proper JSON"
 ### Task 3: Create Svelte stores
 
 **Files:**
+
 - Create: `src/lib/stores/map.js`
 
 **Step 1: Create the store file**
@@ -186,6 +189,7 @@ git commit -m "feat: add reactive stores for map state"
 ### Task 4: Build the Header component with year slider
 
 **Files:**
+
 - Create: `src/lib/components/Header.svelte`
 
 **Step 1: Create Header with integrated range slider**
@@ -193,6 +197,7 @@ git commit -m "feat: add reactive stores for map state"
 Use native HTML `<input type="range">` styled with Tailwind — no external slider library needed. Two range inputs overlaid for a dual-handle slider.
 
 The header should contain:
+
 - App title "Musee Historique de Lausanne" in serif display font
 - Dual-handle year range slider showing `minYear — maxYear`
 - Styled with the editorial/archival palette (parchment bg, ink text, sepia accents)
@@ -223,6 +228,7 @@ git commit -m "feat: add Header component with year range slider"
 ### Task 5: Build the MapLibre map component
 
 **Files:**
+
 - Create: `src/lib/components/Map.svelte`
 
 **Step 1: Create Map.svelte**
@@ -263,6 +269,7 @@ git commit -m "feat: add MapLibre map with clustered markers and year filtering"
 ### Task 6: Build the Drawer component
 
 **Files:**
+
 - Create: `src/lib/components/Drawer.svelte`
 
 **Step 1: Create Drawer.svelte**
@@ -281,7 +288,7 @@ git commit -m "feat: add MapLibre map with clustered markers and year filtering"
 
 ```svelte
 {#if $selectedLocation}
-  <Drawer />
+	<Drawer />
 {/if}
 ```
 
@@ -301,6 +308,7 @@ git commit -m "feat: add responsive drawer component with year pills"
 ### Task 7: Build the ImageGallery component
 
 **Files:**
+
 - Create: `src/lib/components/ImageGallery.svelte`
 
 **Step 1: Create ImageGallery.svelte**
@@ -315,6 +323,7 @@ Props: `images` (array of `{ id, url, description }`), `year` (string)
 **Step 2: Create lightbox behavior**
 
 When an image is clicked:
+
 - Full-screen overlay with dark semi-transparent background
 - Large image centered
 - Description text below image
@@ -342,6 +351,7 @@ git commit -m "feat: add image gallery with lightbox in drawer"
 ### Task 8: Apply editorial/archival styling
 
 **Files:**
+
 - Modify: `src/app.css`, `src/app.html`, all components
 
 **Step 1: Set up design tokens in app.css**
@@ -350,14 +360,14 @@ git commit -m "feat: add image gallery with lightbox in drawer"
 @import 'tailwindcss';
 
 @theme {
-  --color-parchment: #f5f0e8;
-  --color-parchment-dark: #e8dfd2;
-  --color-ink: #1a1a1a;
-  --color-sepia: #8B7355;
-  --color-sepia-light: #b09a7a;
-  --color-gold: #c5a55a;
-  --font-display: 'DM Serif Display', serif;
-  --font-body: 'Source Serif 4', serif;
+	--color-parchment: #f5f0e8;
+	--color-parchment-dark: #e8dfd2;
+	--color-ink: #1a1a1a;
+	--color-sepia: #8b7355;
+	--color-sepia-light: #b09a7a;
+	--color-gold: #c5a55a;
+	--font-display: 'DM Serif Display', serif;
+	--font-body: 'Source Serif 4', serif;
 }
 ```
 
@@ -368,6 +378,7 @@ Create a subtle CSS noise/grain overlay on the body or main container using a CS
 **Step 3: Style each component**
 
 Go through each component and ensure:
+
 - Header: parchment background, ink text, gold accent on slider handles
 - Map: warm-tinted style (adjust map style if needed)
 - Drawer: parchment background, serif typography, sepia accents on year pills
@@ -390,6 +401,7 @@ git commit -m "feat: apply editorial/archival design system"
 ### Task 9: Configure PWA
 
 **Files:**
+
 - Modify: `vite.config.js`
 - Create: `static/favicon.svg` (or .png), `static/apple-touch-icon.png`
 
@@ -400,24 +412,22 @@ import { SvelteKitPWA } from '@vite-pwa/sveltekit';
 
 // Add to plugins array:
 SvelteKitPWA({
-  registerType: 'autoUpdate',
-  manifest: {
-    name: 'Musee Historique de Lausanne - Carte',
-    short_name: 'MHL Carte',
-    description: 'Carte interactive des images historiques de Lausanne',
-    theme_color: '#f5f0e8',
-    background_color: '#f5f0e8',
-    display: 'standalone',
-    scope: '/Musee-Historique-Lausanne-Carte/',
-    start_url: '/Musee-Historique-Lausanne-Carte/',
-    icons: [
-      { src: 'favicon.svg', sizes: 'any', type: 'image/svg+xml' }
-    ]
-  },
-  workbox: {
-    globPatterns: ['**/*.{js,css,html,json,svg,png}']
-  }
-})
+	registerType: 'autoUpdate',
+	manifest: {
+		name: 'Musee Historique de Lausanne - Carte',
+		short_name: 'MHL Carte',
+		description: 'Carte interactive des images historiques de Lausanne',
+		theme_color: '#f5f0e8',
+		background_color: '#f5f0e8',
+		display: 'standalone',
+		scope: '/Musee-Historique-Lausanne-Carte/',
+		start_url: '/Musee-Historique-Lausanne-Carte/',
+		icons: [{ src: 'favicon.svg', sizes: 'any', type: 'image/svg+xml' }]
+	},
+	workbox: {
+		globPatterns: ['**/*.{js,css,html,json,svg,png}']
+	}
+});
 ```
 
 Note: Use `@vite-pwa/sveltekit` instead of `vite-plugin-pwa` for SvelteKit integration.
@@ -447,6 +457,7 @@ git commit -m "feat: configure PWA with manifest and service worker"
 ### Task 10: Update GitHub Actions deployment
 
 **Files:**
+
 - Modify: `.github/workflows/static.yml`
 
 **Step 1: Update workflow to build SvelteKit**
@@ -456,7 +467,7 @@ name: Deploy to GitHub Pages
 
 on:
   push:
-    branches: ["main"]
+    branches: ['main']
   workflow_dispatch:
 
 permissions:
@@ -465,7 +476,7 @@ permissions:
   id-token: write
 
 concurrency:
-  group: "pages"
+  group: 'pages'
   cancel-in-progress: false
 
 jobs:
@@ -509,6 +520,7 @@ git commit -m "feat: update GitHub Actions to build SvelteKit before deploying"
 ### Task 11: Clean up old files
 
 **Files:**
+
 - Delete: `index.html`, `js/`, `css/`, `dist/`, `scripts/`
 
 **Step 1: Remove old vanilla files**
@@ -544,16 +556,16 @@ git commit -m "chore: remove old vanilla HTML/JS/CSS files"
 
 ## Summary
 
-| Task | What | Key files |
-|------|------|-----------|
-| 1 | Scaffold SvelteKit + Tailwind + static adapter | project config |
-| 2 | Convert data.js → data.json | `static/data.json` |
-| 3 | Svelte stores | `src/lib/stores/map.js` |
-| 4 | Header + year slider | `Header.svelte` |
-| 5 | MapLibre map + markers + clustering | `Map.svelte` |
-| 6 | Bottom drawer / side panel | `Drawer.svelte` |
-| 7 | Image gallery + lightbox | `ImageGallery.svelte` |
-| 8 | Editorial/archival styling pass | all components |
-| 9 | PWA config | `vite.config.js`, manifest |
-| 10 | GitHub Actions update | `.github/workflows/static.yml` |
-| 11 | Clean up old files | delete `index.html`, `js/`, `css/`, `dist/` |
+| Task | What                                           | Key files                                   |
+| ---- | ---------------------------------------------- | ------------------------------------------- |
+| 1    | Scaffold SvelteKit + Tailwind + static adapter | project config                              |
+| 2    | Convert data.js → data.json                    | `static/data.json`                          |
+| 3    | Svelte stores                                  | `src/lib/stores/map.js`                     |
+| 4    | Header + year slider                           | `Header.svelte`                             |
+| 5    | MapLibre map + markers + clustering            | `Map.svelte`                                |
+| 6    | Bottom drawer / side panel                     | `Drawer.svelte`                             |
+| 7    | Image gallery + lightbox                       | `ImageGallery.svelte`                       |
+| 8    | Editorial/archival styling pass                | all components                              |
+| 9    | PWA config                                     | `vite.config.js`, manifest                  |
+| 10   | GitHub Actions update                          | `.github/workflows/static.yml`              |
+| 11   | Clean up old files                             | delete `index.html`, `js/`, `css/`, `dist/` |
