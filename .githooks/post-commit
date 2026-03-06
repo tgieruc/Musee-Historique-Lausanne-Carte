@@ -1,0 +1,20 @@
+#!/bin/bash
+ASTRO_REPO="$HOME/Documents/theogieruc.dev"
+SUBMODULE_PATH="mhl-carte"
+
+if [ ! -d "$ASTRO_REPO/.git" ]; then
+	echo "Astro repo not found at $ASTRO_REPO, skipping submodule update"
+	exit 0
+fi
+
+echo "Updating submodule pointer in theogieruc.dev..."
+cd "$ASTRO_REPO"
+git -C "$SUBMODULE_PATH" fetch origin
+git -C "$SUBMODULE_PATH" checkout "$(git -C "$SUBMODULE_PATH" rev-parse origin/main)"
+git add "$SUBMODULE_PATH"
+
+if git diff --cached --quiet; then
+	echo "Submodule already up to date"
+else
+	git commit -m "chore: update mhl-carte submodule"
+fi
