@@ -10,14 +10,14 @@ export default defineConfig({
 		SvelteKitPWA({
 			registerType: 'autoUpdate',
 			manifest: {
-				name: 'Musée Historique de Lausanne - Carte',
+				name: 'Musee Historique de Lausanne - Carte',
 				short_name: 'MHL Carte',
 				description: 'Carte interactive des images historiques de Lausanne',
-				theme_color: '#f5f0e8',
-				background_color: '#f5f0e8',
+				theme_color: '#000000',
+				background_color: '#000000',
 				display: 'standalone',
-				scope: '/Musee-Historique-Lausanne-Carte/',
-				start_url: '/Musee-Historique-Lausanne-Carte/',
+				scope: '/mhl-carte/',
+				start_url: '/mhl-carte/',
 				icons: [
 					{
 						src: 'favicon.svg',

@@ -5,7 +5,7 @@
 	import { selectedLocation } from '$lib/stores/map.js';
 </script>
 
-<div class="h-screen flex flex-col bg-parchment">
+<div class="h-screen flex flex-col bg-terminal-bg">
 	<Header />
 	<div class="flex-1 relative overflow-hidden">
 		<Map />
