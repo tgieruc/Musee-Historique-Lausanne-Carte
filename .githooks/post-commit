@@ -7,10 +7,15 @@ if [ ! -d "$ASTRO_REPO/.git" ]; then
 	exit 0
 fi
 
-echo "Updating submodule pointer in theogieruc.dev..."
+# Get the commit hash we just made
+MAP_COMMIT="$(git rev-parse HEAD)"
+
+echo "Updating submodule pointer in theogieruc.dev to $MAP_COMMIT..."
 cd "$ASTRO_REPO"
-git -C "$SUBMODULE_PATH" fetch origin
-git -C "$SUBMODULE_PATH" checkout "$(git -C "$SUBMODULE_PATH" rev-parse origin/main)"
+
+# Point submodule to the local commit (works because both repos are local)
+git -C "$SUBMODULE_PATH" fetch "$OLDPWD" main
+git -C "$SUBMODULE_PATH" checkout "$MAP_COMMIT"
 git add "$SUBMODULE_PATH"
 
 if git diff --cached --quiet; then
