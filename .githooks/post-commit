@@ -1,5 +1,6 @@
 #!/bin/bash
 ASTRO_REPO="$HOME/Documents/theogieruc.dev"
+MAP_REPO="$(git rev-parse --show-toplevel)"
 SUBMODULE_PATH="mhl-carte"
 
 if [ ! -d "$ASTRO_REPO/.git" ]; then
@@ -7,15 +8,16 @@ if [ ! -d "$ASTRO_REPO/.git" ]; then
 	exit 0
 fi
 
-# Get the commit hash we just made
 MAP_COMMIT="$(git rev-parse HEAD)"
 
-echo "Updating submodule pointer in theogieruc.dev to $MAP_COMMIT..."
+echo "Updating submodule in theogieruc.dev to $(echo $MAP_COMMIT | head -c 7)..."
 cd "$ASTRO_REPO"
 
-# Point submodule to the local commit (works because both repos are local)
-git -C "$SUBMODULE_PATH" fetch "$OLDPWD" main
-git -C "$SUBMODULE_PATH" checkout "$MAP_COMMIT"
+# Fetch from the local map repo into the submodule's object store
+GIT_DIR="$ASTRO_REPO/.git/modules/$SUBMODULE_PATH"
+git --git-dir="$GIT_DIR" --work-tree="$ASTRO_REPO/$SUBMODULE_PATH" fetch "$MAP_REPO" main
+git --git-dir="$GIT_DIR" --work-tree="$ASTRO_REPO/$SUBMODULE_PATH" checkout "$MAP_COMMIT"
+
 git add "$SUBMODULE_PATH"
 
 if git diff --cached --quiet; then
