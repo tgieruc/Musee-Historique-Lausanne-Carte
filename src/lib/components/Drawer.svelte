@@ -61,7 +61,7 @@
 		{isMobile
 		? 'bottom-0 left-0 right-0 border-t'
 		: 'top-0 right-0 bottom-0 w-[480px] border-l'}"
-	style={isMobile ? 'height: 55vh;' : ''}
+	style={isMobile ? 'height: 80vh;' : ''}
 	transition:fly={isMobile ? { y: 300, duration: 250 } : { x: 480, duration: 250 }}
 >
 	<!-- Mobile drag handle -->

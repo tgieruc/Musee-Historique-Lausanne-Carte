@@ -127,6 +127,19 @@
 				}
 			});
 
+			// Invisible hit target for easier tapping on mobile
+			m.addLayer({
+				id: 'unclustered-hit',
+				type: 'circle',
+				source: 'locations',
+				filter: ['!', ['has', 'point_count']],
+				paint: {
+					'circle-color': '#000000',
+					'circle-radius': 22,
+					'circle-opacity': 0
+				}
+			});
+
 			// Click cluster -> zoom
 			m.on('click', 'clusters', async (e) => {
 				const features = m.queryRenderedFeatures(e.point, { layers: ['clusters'] });
@@ -142,18 +155,20 @@
 				} catch (_) {}
 			});
 
-			// Click marker -> open drawer
-			m.on('click', 'unclustered-point', (e) => {
-				const feature = e.features[0];
-				const idx = feature.properties.index;
-				const loc = allData.current[idx];
-				if (loc) {
-					selectedLocation.set(loc);
-				}
-			});
+			// Click marker -> open drawer (use hit target for easier tapping)
+			for (const layer of ['unclustered-point', 'unclustered-hit']) {
+				m.on('click', layer, (e) => {
+					const feature = e.features[0];
+					const idx = feature.properties.index;
+					const loc = allData.current[idx];
+					if (loc) {
+						selectedLocation.set(loc);
+					}
+				});
+			}
 
 			// Cursor
-			for (const layer of ['clusters', 'unclustered-point']) {
+			for (const layer of ['clusters', 'unclustered-point', 'unclustered-hit']) {
 				m.on('mouseenter', layer, () => {
 					m.getCanvas().style.cursor = 'pointer';
 				});
