@@ -1,6 +1,22 @@
 @import 'tailwindcss';
 
 @theme {
+	/* Light theme (default) — Monoxylphide-derived */
+	--color-terminal-bg: #F0F0F0;
+	--color-terminal-bg-light: #E2E2E2;
+	--color-terminal-border: #ADADAD;
+	--color-text-gold: #242421;
+	--color-text-bright: #242421;
+	--color-text-dim: #696969;
+	--color-accent-cyan: #9AA3F1;
+	--color-accent-cyan-hover: #7A85ED;
+	--color-accent-gold: #242421;
+	--color-accent-orange: #696969;
+	--color-accent-green: #242421;
+	--font-mono: 'Google Sans Code', 'SF Mono', 'Fira Code', 'Consolas', 'Monaco', monospace;
+}
+
+[data-theme="dark"] {
 	--color-terminal-bg: #000000;
 	--color-terminal-bg-light: #0a0a0a;
 	--color-terminal-border: #333333;
@@ -22,7 +38,7 @@ body {
 	position: relative;
 }
 
-/* Scanline overlay for CRT feel */
+/* CRT scanline overlay — dark mode only */
 body::after {
 	content: '';
 	position: fixed;
@@ -36,10 +52,19 @@ body::after {
 		rgba(0, 0, 0, 0.15) 2px,
 		rgba(0, 0, 0, 0.15) 4px
 	);
+	opacity: 0;
+}
+
+[data-theme="dark"] body::after {
 	opacity: 0.3;
 }
 
 ::selection {
+	background: rgba(154, 163, 241, 0.45);
+	color: #242421;
+}
+
+[data-theme='dark'] ::selection {
 	background: #003366aa;
 	color: #e9f7ff;
 }
