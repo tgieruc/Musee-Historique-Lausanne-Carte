@@ -1,6 +1,7 @@
 <script>
 	import { onMount, tick } from 'svelte';
-	import maplibregl from 'maplibre-gl';
+	import * as maplibregl from 'maplibre-gl';
+	import mapWorkerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?url';
 	import 'maplibre-gl/dist/maplibre-gl.css';
 	import { base } from '$app/paths';
 	import { minYear, maxYear, selectedLocation, selectionRequest } from '$lib/stores/map.js';
@@ -79,6 +80,7 @@
 		}
 	}
 	function createMap() {
+		maplibregl.setWorkerUrl(mapWorkerUrl);
 		clearTimeout(mapTimer);
 		map?.remove();
 		map = null;
