@@ -19,7 +19,9 @@ Interactive map displaying 15,766 historical photos from the [Musee Historique L
 
 - Interactive map with clustered markers
 - Inclusive year filter (1808-2009), including a single exact year
-- Keyboard-accessible list synchronized with visible map locations and dates
+- Compact caption search, insensitive to accents and case, filtered by selected years
+- Keyboard-accessible results across the archive; empty search browses visible map locations
+- Search results open the matching photo year and bring the selected marker into view
 - Loading, empty, and retry states for the archive, map, and images
 - Image gallery with lightbox and keyboard navigation
 - Links back to the museum's [Museris database](https://museris.lausanne.ch/)

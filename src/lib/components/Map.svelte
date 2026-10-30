@@ -1,10 +1,10 @@
 <script>
-	import { onMount } from 'svelte';
+	import { onMount, tick } from 'svelte';
 	import maplibregl from 'maplibre-gl';
 	import 'maplibre-gl/dist/maplibre-gl.css';
 	import { base } from '$app/paths';
-	import { minYear, maxYear, selectedLocation } from '$lib/stores/map.js';
-	import { matchingLocations, featureCollection, locationLabel } from '$lib/archive.js';
+	import { minYear, maxYear, selectedLocation, selectionRequest } from '$lib/stores/map.js';
+	import { matchingLocations, featureCollection, locationLabel, searchLocations } from '$lib/archive.js';
 	let mapContainer;
 	let map = $state.raw(null);
 	let data = $state.raw([]);
@@ -12,24 +12,29 @@
 	let mapState = $state('loading');
 	let bounds = $state(null);
 	let listOpen = $state(false);
+	let query = $state('');
+	let searchInput;
 	let limit = $state(30);
 	let geolocationError = $state(false);
 	let controller;
 	let disposed = false;
 	let mapTimer;
 	let results = $derived(matchingLocations(data, $minYear, $maxYear));
+	let searched = $derived(searchLocations(results, query));
 	let visible = $derived(
-		mapState === 'ready' && bounds
-			? results.filter(
-					({ location: l }) =>
-						l.longitude >= bounds[0][0] &&
-						l.longitude <= bounds[1][0] &&
-						l.latitude >= bounds[0][1] &&
-						l.latitude <= bounds[1][1]
-				)
-			: results
+		query.trim()
+			? searched
+			: mapState === 'ready' && bounds
+				? results.filter(
+						({ location: l }) =>
+							l.longitude >= bounds[0][0] &&
+							l.longitude <= bounds[1][0] &&
+							l.latitude >= bounds[0][1] &&
+							l.latitude <= bounds[1][1]
+					)
+				: results
 	);
-	let imageCount = $derived(results.reduce((n, r) => n + r.count, 0));
+
 	async function loadArchive() {
 		controller?.abort();
 		const request = new AbortController();
@@ -208,6 +213,7 @@
 				const loc = data[idx];
 				if (loc) {
 					m.getCanvas().focus();
+					selectionRequest.set(null);
 					selectedLocation.set(loc);
 				}
 			});
@@ -237,7 +243,7 @@
 		});
 	}
 	$effect(() => {
-		const geojson = featureCollection(results);
+		const geojson = featureCollection(searched);
 		if (!map || mapState !== 'ready' || archiveState !== 'ready') return;
 		const source = map.getSource('locations');
 		if (source) source.setData(geojson);
@@ -253,26 +259,68 @@
 		minYear.set(1808);
 		maxYear.set(2009);
 	}
-	function select(location) {
-		selectedLocation.set(location);
+	function select(result) {
+		selectionRequest.set({ location: result.location, year: result.matchYear ?? null });
+		selectedLocation.set(result.location);
+		if (map && mapState === 'ready' && query.trim()) {
+			const width = mapContainer.clientWidth;
+			map.easeTo({
+				center: [result.location.longitude, result.location.latitude],
+				zoom: Math.max(map.getZoom(), 16),
+				offset: width >= 768 ? [-Math.min(width * 0.18, 230), 0] : [0, -mapContainer.clientHeight * 0.2],
+				duration: matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 500
+			});
+		}
+	}
+	function dismissResults() {
+		listOpen = false;
+		searchInput?.focus();
+		listOpen = false;
 	}
 </script>
 
 <div bind:this={mapContainer} class="absolute inset-0 w-full h-full"></div>
 <div class="archive-tools">
-	<div class="summary" role="status" aria-live="polite">
-		{#if archiveState === 'loading'}Chargement de l’archive…
-		{:else if archiveState === 'error'}Archive indisponible. <button type="button" onclick={loadArchive}
-				>Réessayer l’archive</button
-			>
-		{:else}{results.length} lieux · {imageCount} images
-			<button
-				type="button"
-				aria-expanded={listOpen}
-				aria-controls="archive-results"
-				onclick={() => (listOpen = !listOpen)}>{listOpen ? 'Masquer la liste' : 'Voir la liste'}</button
-			>{/if}
-	</div>
+	<form
+		class="search"
+		role="search"
+		onsubmit={(e) => {
+			e.preventDefault();
+			listOpen = true;
+		}}
+	>
+		<input
+			bind:this={searchInput}
+			type="search"
+			disabled={archiveState !== 'ready'}
+			aria-label="Rechercher dans les descriptions"
+			placeholder="Rechercher un lieu…"
+			bind:value={query}
+			aria-controls="archive-results"
+			onfocus={() => (listOpen = true)}
+			oninput={() => {
+				listOpen = true;
+				limit = 30;
+			}}
+			onkeydown={async (e) => {
+				if (e.key === 'Escape') {
+					e.preventDefault();
+					listOpen = false;
+				}
+				if (e.key === 'ArrowDown') {
+					e.preventDefault();
+					listOpen = true;
+					await tick();
+					document.querySelector('#archive-results li button')?.focus();
+				}
+			}}
+		/>
+		{#if listOpen}<button type="button" aria-label="Fermer les résultats" onclick={dismissResults}>×</button>{/if}
+	</form>
+	{#if archiveState === 'loading'}<p class="notice" role="status">Chargement de l’archive…</p>{/if}
+	{#if archiveState === 'error'}<div class="notice" role="status">
+			Archive indisponible. <button type="button" onclick={loadArchive}>Réessayer l’archive</button>
+		</div>{/if}
 	{#if archiveState === 'ready' && !results.length}<div class="notice" role="status">
 			Aucun document pour cette période. <button type="button" onclick={resetDates}>Réinitialiser les dates</button>
 		</div>{/if}
@@ -290,22 +338,22 @@
 		</div>{/if}
 	{#if listOpen && archiveState === 'ready'}
 		<section id="archive-results" class="results" aria-label="Liste des lieux">
-			<h2>
-				{mapState === 'ready'
-					? `${visible.length} lieux dans la carte visible`
-					: `${visible.length} lieux de l’archive`}
+			<h2 role="status" aria-live="polite">
+				{query.trim()
+					? `${visible.length} lieu${visible.length !== 1 ? 'x' : ''} trouvé${visible.length !== 1 ? 's' : ''}`
+					: mapState === 'ready'
+						? 'Lieux sur la carte'
+						: 'Lieux de l’archive'}
 			</h2>
-			<p class="hint">Les nombres sur la carte indiquent des lieux, pas des images.</p>
-			{#if !visible.length && results.length}<p>
+			{#if query.trim() && !visible.length}<p>Aucun résultat dans les descriptions pour cette période.</p>
+				<button type="button" onclick={resetDates}>Chercher sur toutes les années</button>
+			{:else if !visible.length && results.length}<p>
 					Aucun lieu dans cette zone. Déplacez la carte ou réduisez le zoom.
 				</p>{/if}
 			<ul>
 				{#each visible.slice(0, limit) as result (result.index)}<li>
-						<button
-							type="button"
-							onclick={() => select(result.location)}
-							aria-pressed={$selectedLocation === result.location}
-							><span>{locationLabel(result.location)}</span><small
+						<button type="button" onclick={() => select(result)} aria-pressed={$selectedLocation === result.location}
+							><span>{result.caption || locationLabel(result.location)}</span><small
 								>{result.years[0].year}–{result.years.at(-1).year} · {result.count} image{result.count !== 1
 									? 's'
 									: ''}</small
@@ -333,7 +381,7 @@
 		gap: 8px;
 		pointer-events: none;
 	}
-	.summary,
+	.search,
 	.notice,
 	.results {
 		background: #fff;
@@ -344,8 +392,34 @@
 		font-size: 0.8rem;
 		pointer-events: auto;
 	}
-	.summary {
+	.search {
+		display: flex;
+		align-items: center;
+		padding: 0 8px 0 12px;
 		flex: none;
+		width: 300px;
+		max-width: 100%;
+	}
+	.search input {
+		width: 100%;
+		min-width: 0;
+		height: 44px;
+		background: transparent;
+		color: #000;
+		font: inherit;
+		font-size: 16px;
+	}
+	.search button {
+		flex: none;
+		width: 36px;
+		font-size: 22px;
+		text-decoration: none;
+	}
+	li span {
+		display: -webkit-box;
+		-webkit-line-clamp: 3;
+		-webkit-box-orient: vertical;
+		overflow: hidden;
 	}
 	.notice {
 		flex-shrink: 0;
@@ -356,9 +430,7 @@
 		text-decoration: underline;
 		text-underline-offset: 3px;
 	}
-	.summary button {
-		margin-left: 8px;
-	}
+
 	.results {
 		overflow: auto;
 		min-height: 0;

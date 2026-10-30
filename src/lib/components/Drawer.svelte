@@ -1,12 +1,13 @@
 <script>
 	import { onMount, untrack } from 'svelte';
-	import { selectedLocation, minYear, maxYear } from '$lib/stores/map.js';
+	import { selectedLocation, selectionRequest, minYear, maxYear } from '$lib/stores/map.js';
 	import { dialog } from '$lib/actions/dialog.js';
 	import ImageGallery from './ImageGallery.svelte';
 
 	let isMobile = $state(false);
 	let selectedYear = $state(null);
 	let previousLocation;
+	let previousRequest;
 	let panel;
 	let location = $derived($selectedLocation);
 	let filteredYears = $derived(
@@ -17,7 +18,16 @@
 	let totalImages = $derived(filteredYears.reduce((sum, y) => sum + y.images.length, 0));
 	$effect(() => {
 		const current = untrack(() => selectedYear);
-		if (location !== previousLocation) {
+		const request = $selectionRequest;
+		if (
+			request !== previousRequest &&
+			request?.location === location &&
+			filteredYears.some((y) => y.year === request.year)
+		) {
+			selectedYear = request.year;
+			previousLocation = location;
+			panel?.querySelector('[data-close]')?.focus();
+		} else if (location !== previousLocation) {
 			selectedYear = filteredYears[0]?.year ?? null;
 			previousLocation = location;
 			panel?.querySelector('[data-close]')?.focus();
@@ -25,6 +35,7 @@
 			selectedYear =
 				filteredYears.toSorted((a, b) => Math.abs(+a.year - +current) - Math.abs(+b.year - +current))[0]?.year ?? null;
 		}
+		previousRequest = request;
 	});
 	onMount(() => {
 		const query = matchMedia('(max-width: 767px)');

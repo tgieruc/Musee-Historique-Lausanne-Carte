@@ -12,11 +12,16 @@ const archive = [
 		years: [
 			{ year: '1903', images: [image(1)] },
 			{ year: '1956', images: [image(2)] },
-			{ year: '1959', images: [image(3), image(4)] },
+			{ year: '1959', images: [image(3, 'La Cathédrale de Lausanne, vue de la Cité.'), image(4)] },
 			{ year: 'Unknown', images: [image(6)] }
 		]
 	},
-	{ title: 1, latitude: 46.528, longitude: 6.645, years: [{ year: '2000', images: [image(5)] }] }
+	{
+		title: 1,
+		latitude: 46.56,
+		longitude: 6.75,
+		years: [{ year: '2000', images: [image(5, 'Vue de la cathédrale depuis les environs.')] }]
+	}
 ];
 const png = Buffer.from(
 	'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jRZkAAAAASUVORK5CYII=',
@@ -39,7 +44,8 @@ async function setup(page, { dataFailure = false, mapFailure = false, imageFailu
 	return failures;
 }
 async function openFirst(page) {
-	await page.getByRole('button', { name: 'Voir la liste', exact: true }).click();
+	await expect(page.getByRole('searchbox')).toBeEnabled();
+	await page.getByRole('searchbox').focus();
 	const result = page.locator('#archive-results li button').first();
 	await result.focus();
 	await page.keyboard.press('Enter');
@@ -126,7 +132,9 @@ test('archive failure retries without reloading page', async ({ page }) => {
 	await expect(page.getByText('Archive indisponible.', { exact: false })).toBeVisible();
 	f.data = false;
 	await page.getByRole('button', { name: 'Réessayer l’archive' }).click();
-	await expect(page.getByRole('button', { name: 'Voir la liste', exact: true })).toBeVisible();
+	await expect(page.getByRole('searchbox')).toBeEnabled();
+	await page.getByRole('searchbox').focus();
+	await expect(page.locator('#archive-results li button').first()).toBeVisible();
 });
 test('basemap failure retains keyboard archive access and retry', async ({ page }) => {
 	const f = await setup(page, { mapFailure: true });
@@ -147,4 +155,32 @@ test('failed image has stable fallback, source, and retry', async ({ page }) => 
 	await page.getByRole('button', { name: 'Réessayer l’image' }).click();
 	await expect(page.getByText('Image indisponible.', { exact: true })).not.toBeVisible();
 	await expect(page.getByRole('button', { name: 'Agrandir l’image 1' }).locator('img')).toBeVisible();
+});
+
+test('search ignores accents, finds offscreen places, respects dates, and opens matching year', async ({ page }) => {
+	await setup(page);
+	await expect(page.getByText('Voir la liste', { exact: true })).toHaveCount(0);
+	await expect(page.locator('.summary')).toHaveCount(0);
+	const search = page.getByRole('searchbox');
+	await search.fill('CATHEDRALE');
+	await expect(page.locator('#archive-results li')).toHaveCount(2);
+	const end = page.getByRole('spinbutton', { name: 'Année de fin' });
+	await end.fill('1959');
+	await end.press('Tab');
+	await expect(page.locator('#archive-results li')).toHaveCount(1);
+	await search.focus();
+	await search.press('ArrowDown');
+	await page.keyboard.press('Enter');
+	await expect(page.getByRole('button', { name: '1959 (2)', exact: true })).toHaveAttribute('aria-pressed', 'true');
+	await page.getByRole('button', { name: 'Fermer les photographies', exact: true }).click();
+	await end.fill('1956');
+	await end.press('Tab');
+	await expect(page.getByText('Aucun résultat dans les descriptions pour cette période.')).toBeVisible();
+	await page.getByRole('button', { name: 'Chercher sur toutes les années' }).click();
+	await expect(page.locator('#archive-results li')).toHaveCount(2);
+	await search.fill('not-a-real-caption');
+	await expect(page.locator('#archive-results li')).toHaveCount(0);
+	await search.fill('');
+	await search.press('Escape');
+	await expect(page.locator('#archive-results')).toHaveCount(0);
 });
