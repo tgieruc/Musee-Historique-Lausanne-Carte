@@ -1,24 +1,41 @@
 @import 'tailwindcss';
 
 @font-face {
-  font-family: 'Nunito Sans';
-  src: url('./lib/assets/nunito-sans.ttf') format('truetype');
-  font-style: normal;
-  font-weight: 200 900;
-  font-display: swap;
+	font-family: 'Nunito Sans';
+	src: url('./lib/assets/nunito-sans.ttf') format('truetype');
+	font-style: normal;
+	font-weight: 200 900;
+	font-display: swap;
 }
 @theme {
-  --color-surface: #ffffff;
-  --color-surface-soft: #f6f6f6;
-  --color-line: #e4e4e4;
-  --color-ink: #000000;
-  --color-muted: #626262;
-  --font-sans: 'Nunito Sans', system-ui, sans-serif;
+	--color-surface: #ffffff;
+	--color-surface-soft: #f6f6f6;
+	--color-line: #e4e4e4;
+	--color-ink: #000000;
+	--color-muted: #626262;
+	--font-sans: 'Nunito Sans', system-ui, sans-serif;
 }
-:root { color-scheme: light; }
-body { font-family: var(--font-sans); background: var(--color-surface); color: var(--color-ink); }
-::selection { background: #ddd; color: #000; }
-:focus-visible { outline: 2px solid #000; outline-offset: 3px; }
+:root {
+	color-scheme: light;
+}
+body {
+	font-family: var(--font-sans);
+	background: var(--color-surface);
+	color: var(--color-ink);
+}
+::selection {
+	background: #ddd;
+	color: #000;
+}
+:focus-visible {
+	outline: 2px solid #000;
+	outline-offset: 3px;
+}
 @media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after { animation: none !important; transition: none !important; }
+	*,
+	*::before,
+	*::after {
+		animation: none !important;
+		transition: none !important;
+	}
 }

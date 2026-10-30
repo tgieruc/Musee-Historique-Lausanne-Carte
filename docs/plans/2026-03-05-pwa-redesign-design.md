@@ -21,6 +21,7 @@ Modernize the MHL interactive map from vanilla HTML/JS into a SvelteKit PWA with
 ## Layout & Interaction
 
 ### Map (primary view)
+
 - Full-screen MapLibre GL map with warm-tinted vector style
 - Top bar: app title + redesigned year range slider (minimal, serif type for range display)
 - Custom archival-style map markers (small sepia-toned circular pins)
@@ -28,6 +29,7 @@ Modernize the MHL interactive map from vanilla HTML/JS into a SvelteKit PWA with
 - Geolocation button carried forward
 
 ### Bottom drawer (mobile) / Side panel (desktop)
+
 - Opens on marker/cluster tap
 - Location title at top
 - Year pills/tabs to switch between available years

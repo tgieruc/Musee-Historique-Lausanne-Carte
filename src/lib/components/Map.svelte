@@ -138,7 +138,9 @@
 						zoom: zoom,
 						duration: 500
 					});
-				} catch (_) {}
+				} catch {
+					/* Cluster may have been removed by a filter change. */
+				}
 			});
 
 			// Click marker -> open drawer (use hit target for easier tapping)
@@ -183,9 +185,28 @@
 <div bind:this={mapContainer} class="absolute inset-0 w-full h-full"></div>
 
 <style>
-  :global(.maplibregl-ctrl-group) { border-radius: 14px; overflow: hidden; box-shadow: 0 2px 10px #0000000a; border: 1px solid #e4e4e4; background: #fff; }
-  :global(.maplibregl-ctrl-group button) { width: 40px; height: 40px; background-color: #fff; }
-  :global(.maplibregl-ctrl-group button:hover) { background-color: #f6f6f6; }
-  :global(.maplibregl-ctrl-attrib) { font-size: 11px; font-family: 'Nunito Sans', sans-serif; background: #ffffffed; color: #626262; }
-  :global(.maplibregl-ctrl-attrib a) { color: #626262; }
+	:global(.maplibregl-ctrl-group) {
+		border-radius: 14px;
+		overflow: hidden;
+		box-shadow: 0 2px 10px #0000000a;
+		border: 1px solid #e4e4e4;
+		background: #fff;
+	}
+	:global(.maplibregl-ctrl-group button) {
+		width: 40px;
+		height: 40px;
+		background-color: #fff;
+	}
+	:global(.maplibregl-ctrl-group button:hover) {
+		background-color: #f6f6f6;
+	}
+	:global(.maplibregl-ctrl-attrib) {
+		font-size: 11px;
+		font-family: 'Nunito Sans', sans-serif;
+		background: #ffffffed;
+		color: #626262;
+	}
+	:global(.maplibregl-ctrl-attrib a) {
+		color: #626262;
+	}
 </style>
