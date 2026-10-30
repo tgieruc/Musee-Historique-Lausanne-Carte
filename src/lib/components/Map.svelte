@@ -272,9 +272,11 @@
 			});
 		}
 	}
-	function dismissResults() {
-		listOpen = false;
-		searchInput?.focus();
+	function cancelSearch() {
+		// Restore keyboard focus before closing: focus itself opens the results.
+		searchInput?.focus({ preventScroll: true });
+		query = '';
+		limit = 30;
 		listOpen = false;
 	}
 </script>
@@ -298,6 +300,7 @@
 			bind:value={query}
 			aria-controls="archive-results"
 			onfocus={() => (listOpen = true)}
+			onclick={() => (listOpen = true)}
 			oninput={() => {
 				listOpen = true;
 				limit = 30;
@@ -305,7 +308,7 @@
 			onkeydown={async (e) => {
 				if (e.key === 'Escape') {
 					e.preventDefault();
-					listOpen = false;
+					cancelSearch();
 				}
 				if (e.key === 'ArrowDown') {
 					e.preventDefault();
@@ -315,7 +318,8 @@
 				}
 			}}
 		/>
-		{#if listOpen}<button type="button" aria-label="Fermer les résultats" onclick={dismissResults}>×</button>{/if}
+		{#if listOpen || query}<button type="button" aria-label="Annuler la recherche" onclick={cancelSearch}>×</button
+			>{/if}
 	</form>
 	{#if archiveState === 'loading'}<p class="notice" role="status">Chargement de l’archive…</p>{/if}
 	{#if archiveState === 'error'}<div class="notice" role="status">
@@ -409,9 +413,14 @@
 		font: inherit;
 		font-size: 16px;
 	}
+	.search input::-webkit-search-cancel-button {
+		-webkit-appearance: none;
+		display: none;
+	}
 	.search button {
 		flex: none;
-		width: 36px;
+		width: 44px;
+		min-height: 44px;
 		font-size: 22px;
 		text-decoration: none;
 	}

@@ -184,3 +184,23 @@ test('search ignores accents, finds offscreen places, respects dates, and opens 
 	await search.press('Escape');
 	await expect(page.locator('#archive-results')).toHaveCount(0);
 });
+
+test('cancel search clears the filter, closes results, and allows reopening', async ({ page }) => {
+	await page.setViewportSize({ width: 320, height: 568 });
+	await setup(page);
+	const search = page.getByRole('searchbox');
+	await search.fill('cathedrale');
+	await expect(page.locator('#archive-results li')).toHaveCount(2);
+	await page.getByRole('button', { name: 'Annuler la recherche' }).click();
+	await expect(search).toHaveValue('');
+	await expect(page.locator('#archive-results')).toHaveCount(0);
+	await expect(search).toBeFocused();
+	await search.click();
+	await expect(page.locator('#archive-results')).toBeVisible();
+	await search.fill('cathedrale');
+	await search.press('Escape');
+	await expect(search).toHaveValue('');
+	await expect(page.locator('#archive-results')).toHaveCount(0);
+	await search.press('ArrowDown');
+	await expect(page.locator('#archive-results li button').first()).toBeFocused();
+});
