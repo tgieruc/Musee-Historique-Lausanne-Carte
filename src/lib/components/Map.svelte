@@ -4,187 +4,398 @@
 	import 'maplibre-gl/dist/maplibre-gl.css';
 	import { base } from '$app/paths';
 	import { minYear, maxYear, selectedLocation } from '$lib/stores/map.js';
-	import { get } from 'svelte/store';
-
-	let mapContainer = $state(null);
-	let map = $state(null);
-	let allData = { current: [] };
-
-	function buildGeoJSON(data, min, max) {
-		const features = [];
-		for (let i = 0; i < data.length; i++) {
-			const loc = data[i];
-			if (!loc.years || loc.years.length === 0) continue;
-			const hasYear = loc.years.some((y) => {
-				const yr = parseInt(y.year);
-				return yr >= min && yr <= max;
-			});
-			if (!hasYear) continue;
-			features.push({
-				type: 'Feature',
-				geometry: {
-					type: 'Point',
-					coordinates: [loc.longitude, loc.latitude]
-				},
-				properties: { index: i }
-			});
+	import { matchingLocations, featureCollection, locationLabel } from '$lib/archive.js';
+	let mapContainer;
+	let map = $state.raw(null);
+	let data = $state.raw([]);
+	let archiveState = $state('loading');
+	let mapState = $state('loading');
+	let bounds = $state(null);
+	let listOpen = $state(false);
+	let limit = $state(30);
+	let geolocationError = $state(false);
+	let controller;
+	let disposed = false;
+	let mapTimer;
+	let results = $derived(matchingLocations(data, $minYear, $maxYear));
+	let visible = $derived(
+		mapState === 'ready' && bounds
+			? results.filter(
+					({ location: l }) =>
+						l.longitude >= bounds[0][0] &&
+						l.longitude <= bounds[1][0] &&
+						l.latitude >= bounds[0][1] &&
+						l.latitude <= bounds[1][1]
+				)
+			: results
+	);
+	let imageCount = $derived(results.reduce((n, r) => n + r.count, 0));
+	async function loadArchive() {
+		controller?.abort();
+		const request = new AbortController();
+		controller = request;
+		archiveState = 'loading';
+		const timer = setTimeout(() => request.abort(), 15000);
+		try {
+			const response = await fetch(`${base}/data.json`, { signal: request.signal });
+			if (!response.ok) throw new Error('Archive response failed');
+			const json = await response.json();
+			if (
+				!Array.isArray(json) ||
+				!json.every(
+					(l) =>
+						Number.isFinite(l.latitude) &&
+						Number.isFinite(l.longitude) &&
+						Array.isArray(l.years) &&
+						l.years.every((y) => (typeof y.year === 'string' || typeof y.year === 'number') && Array.isArray(y.images))
+				)
+			)
+				throw new Error('Invalid archive');
+			if (disposed || controller !== request) return;
+			data = json;
+			archiveState = 'ready';
+		} catch {
+			if (!disposed && controller === request) archiveState = 'error';
+		} finally {
+			clearTimeout(timer);
 		}
-		return { type: 'FeatureCollection', features };
 	}
-
-	onMount(() => {
-		const m = new maplibregl.Map({
-			container: mapContainer,
-			style: 'https://basemaps.cartocdn.com/gl/positron-gl-style/style.json',
-			center: [6.6322734, 46.522935],
-			zoom: 14,
-			attributionControl: false
-		});
-
-		m.addControl(new maplibregl.AttributionControl({ compact: true }), 'bottom-right');
-		m.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'bottom-right');
-		m.addControl(
-			new maplibregl.GeolocateControl({
+	function createMap() {
+		clearTimeout(mapTimer);
+		map?.remove();
+		map = null;
+		mapState = 'loading';
+		bounds = null;
+		try {
+			const m = new maplibregl.Map({
+				container: mapContainer,
+				style: 'https://basemaps.cartocdn.com/gl/positron-gl-style/style.json',
+				center: [6.6322734, 46.522935],
+				zoom: 14,
+				attributionControl: false,
+				locale: {
+					'NavigationControl.ZoomIn': 'Zoom avant',
+					'NavigationControl.ZoomOut': 'Zoom arrière',
+					'GeolocateControl.FindMyLocation': 'Me localiser',
+					'GeolocateControl.LocationNotAvailable': 'Localisation indisponible',
+					'GeolocateControl.TrackLocation': 'Suivre ma position'
+				}
+			});
+			map = m;
+			const updateBounds = () => (bounds = m.getBounds().toArray());
+			m.on('style.load', () => {
+				if (map !== m) return;
+				clearTimeout(mapTimer);
+				mapState = 'ready';
+				updateBounds();
+			});
+			m.on('moveend', updateBounds);
+			m.on('error', () => {
+				if (map === m) {
+					clearTimeout(mapTimer);
+					mapState = 'error';
+				}
+			});
+			mapTimer = setTimeout(() => {
+				if (map === m && mapState === 'loading') mapState = 'error';
+			}, 15000);
+			m.addControl(new maplibregl.AttributionControl({ compact: true }), 'bottom-right');
+			m.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'bottom-right');
+			const geolocate = new maplibregl.GeolocateControl({
 				positionOptions: { enableHighAccuracy: true },
 				trackUserLocation: true
-			}),
-			'bottom-right'
-		);
-
-		m.on('load', async () => {
-			const res = await fetch(`${base}/data.json`);
-			const data = await res.json();
-			allData.current = data;
-
-			const min = get(minYear);
-			const max = get(maxYear);
-
-			m.addSource('locations', {
-				type: 'geojson',
-				data: buildGeoJSON(data, min, max),
-				cluster: true,
-				clusterMaxZoom: 16,
-				clusterRadius: 45
 			});
-
-			// Cluster circles
-			m.addLayer({
-				id: 'clusters',
-				type: 'circle',
-				source: 'locations',
-				filter: ['has', 'point_count'],
-				paint: {
-					'circle-color': '#000000',
-					'circle-radius': ['interpolate', ['linear'], ['get', 'point_count'], 2, 13, 50, 21, 200, 28],
-					'circle-opacity': 1,
-					'circle-stroke-width': 3,
-					'circle-stroke-color': '#FFFFFF'
-				}
-			});
-
-			// Cluster count text
-			m.addLayer({
-				id: 'cluster-count',
-				type: 'symbol',
-				source: 'locations',
-				filter: ['has', 'point_count'],
-				layout: {
-					'text-field': '{point_count_abbreviated}',
-					'text-size': 11,
-					'text-font': ['Noto Sans Regular']
-				},
-				paint: {
-					'text-color': '#FFFFFF'
-				}
-			});
-
-			// Individual markers
-			m.addLayer({
-				id: 'unclustered-point',
-				type: 'circle',
-				source: 'locations',
-				filter: ['!', ['has', 'point_count']],
-				paint: {
-					'circle-color': '#000000',
-					'circle-radius': 6,
-					'circle-stroke-width': 3,
-					'circle-stroke-color': '#FFFFFF',
-					'circle-opacity': 0.9
-				}
-			});
-
-			// Invisible hit target for easier tapping on mobile
-			m.addLayer({
-				id: 'unclustered-hit',
-				type: 'circle',
-				source: 'locations',
-				filter: ['!', ['has', 'point_count']],
-				paint: {
-					'circle-color': '#000000',
-					'circle-radius': 22,
-					'circle-opacity': 0
-				}
-			});
-
-			// Click cluster -> zoom
-			m.on('click', 'clusters', async (e) => {
-				const features = m.queryRenderedFeatures(e.point, { layers: ['clusters'] });
-				if (!features.length) return;
-				const clusterId = features[0].properties.cluster_id;
-				try {
-					const zoom = await m.getSource('locations').getClusterExpansionZoom(clusterId);
-					m.easeTo({
-						center: features[0].geometry.coordinates,
-						zoom: zoom,
-						duration: 500
-					});
-				} catch {
-					/* Cluster may have been removed by a filter change. */
-				}
-			});
-
-			// Click marker -> open drawer (use hit target for easier tapping)
-			for (const layer of ['unclustered-point', 'unclustered-hit']) {
-				m.on('click', layer, (e) => {
-					const feature = e.features[0];
-					const idx = feature.properties.index;
-					const loc = allData.current[idx];
-					if (loc) {
-						selectedLocation.set(loc);
-					}
-				});
-			}
-
-			// Cursor
-			for (const layer of ['clusters', 'unclustered-point', 'unclustered-hit']) {
-				m.on('mouseenter', layer, () => {
-					m.getCanvas().style.cursor = 'pointer';
-				});
-				m.on('mouseleave', layer, () => {
-					m.getCanvas().style.cursor = '';
-				});
+			geolocate.on('error', () => (geolocationError = true));
+			geolocate.on('geolocate', () => (geolocationError = false));
+			m.addControl(geolocate, 'bottom-right');
+		} catch {
+			mapState = 'error';
+		}
+	}
+	onMount(() => {
+		loadArchive();
+		createMap();
+		return () => {
+			disposed = true;
+			controller?.abort();
+			clearTimeout(mapTimer);
+			map?.remove();
+		};
+	});
+	function installLayers(m, geojson) {
+		m.addSource('locations', { type: 'geojson', data: geojson, cluster: true, clusterMaxZoom: 16, clusterRadius: 45 });
+		// Cluster circles
+		m.addLayer({
+			id: 'clusters',
+			type: 'circle',
+			source: 'locations',
+			filter: ['has', 'point_count'],
+			paint: {
+				'circle-color': '#000000',
+				'circle-radius': ['interpolate', ['linear'], ['get', 'point_count'], 2, 13, 50, 21, 200, 28],
+				'circle-opacity': 1,
+				'circle-stroke-width': 3,
+				'circle-stroke-color': '#FFFFFF'
 			}
 		});
 
-		map = m;
-		return () => m.remove();
-	});
-
-	$effect(() => {
-		const min = $minYear;
-		const max = $maxYear;
-		if (map && allData.current.length) {
-			const source = map.getSource('locations');
-			if (source) {
-				source.setData(buildGeoJSON(allData.current, min, max));
+		// Cluster count text
+		m.addLayer({
+			id: 'cluster-count',
+			type: 'symbol',
+			source: 'locations',
+			filter: ['has', 'point_count'],
+			layout: {
+				'text-field': '{point_count_abbreviated}',
+				'text-size': 11,
+				'text-font': ['Noto Sans Regular']
+			},
+			paint: {
+				'text-color': '#FFFFFF'
 			}
+		});
+
+		// Individual markers
+		m.addLayer({
+			id: 'unclustered-point',
+			type: 'circle',
+			source: 'locations',
+			filter: ['!', ['has', 'point_count']],
+			paint: {
+				'circle-color': '#000000',
+				'circle-radius': 6,
+				'circle-stroke-width': 3,
+				'circle-stroke-color': '#FFFFFF',
+				'circle-opacity': 0.9
+			}
+		});
+
+		// Invisible hit target for easier tapping on mobile
+		m.addLayer({
+			id: 'unclustered-hit',
+			type: 'circle',
+			source: 'locations',
+			filter: ['!', ['has', 'point_count']],
+			paint: {
+				'circle-color': '#000000',
+				'circle-radius': 22,
+				'circle-opacity': 0
+			}
+		});
+
+		// Click cluster -> zoom
+		m.on('click', 'clusters', async (e) => {
+			const features = m.queryRenderedFeatures(e.point, { layers: ['clusters'] });
+			if (!features.length) return;
+			const clusterId = features[0].properties.cluster_id;
+			try {
+				const zoom = await m.getSource('locations').getClusterExpansionZoom(clusterId);
+				m.easeTo({
+					center: features[0].geometry.coordinates,
+					zoom: zoom,
+					duration: 500
+				});
+			} catch {
+				/* Cluster may have been removed by a filter change. */
+			}
+		});
+
+		// Click marker -> open drawer (use hit target for easier tapping)
+		for (const layer of ['unclustered-point', 'unclustered-hit']) {
+			m.on('click', layer, (e) => {
+				const feature = e.features[0];
+				const idx = feature.properties.index;
+				const loc = data[idx];
+				if (loc) {
+					m.getCanvas().focus();
+					selectedLocation.set(loc);
+				}
+			});
+		}
+
+		// Cursor
+		for (const layer of ['clusters', 'unclustered-point', 'unclustered-hit']) {
+			m.on('mouseenter', layer, () => {
+				m.getCanvas().style.cursor = 'pointer';
+			});
+			m.on('mouseleave', layer, () => {
+				m.getCanvas().style.cursor = '';
+			});
+		}
+		m.addSource('selection', { type: 'geojson', data: featureCollection([]) });
+		m.addLayer({
+			id: 'selected-location',
+			type: 'circle',
+			source: 'selection',
+			paint: {
+				'circle-radius': 12,
+				'circle-color': '#ffffff',
+				'circle-opacity': 0.3,
+				'circle-stroke-color': '#000000',
+				'circle-stroke-width': 3
+			}
+		});
+	}
+	$effect(() => {
+		const geojson = featureCollection(results);
+		if (!map || mapState !== 'ready' || archiveState !== 'ready') return;
+		const source = map.getSource('locations');
+		if (source) source.setData(geojson);
+		else installLayers(map, geojson);
+	});
+	$effect(() => {
+		const location = $selectedLocation;
+		if (map && mapState === 'ready' && archiveState === 'ready') {
+			map.getSource('selection')?.setData(featureCollection(results.filter((r) => r.location === location)));
 		}
 	});
+	function resetDates() {
+		minYear.set(1808);
+		maxYear.set(2009);
+	}
+	function select(location) {
+		selectedLocation.set(location);
+	}
 </script>
 
 <div bind:this={mapContainer} class="absolute inset-0 w-full h-full"></div>
+<div class="archive-tools">
+	<div class="summary" role="status" aria-live="polite">
+		{#if archiveState === 'loading'}Chargement de l’archive…
+		{:else if archiveState === 'error'}Archive indisponible. <button type="button" onclick={loadArchive}
+				>Réessayer l’archive</button
+			>
+		{:else}{results.length} lieux · {imageCount} images
+			<button
+				type="button"
+				aria-expanded={listOpen}
+				aria-controls="archive-results"
+				onclick={() => (listOpen = !listOpen)}>{listOpen ? 'Masquer la liste' : 'Voir la liste'}</button
+			>{/if}
+	</div>
+	{#if archiveState === 'ready' && !results.length}<div class="notice" role="status">
+			Aucun document pour cette période. <button type="button" onclick={resetDates}>Réinitialiser les dates</button>
+		</div>{/if}
+	{#if mapState === 'loading'}<p class="notice" role="status">Chargement de la carte…</p>{/if}
+	{#if mapState === 'error'}<div class="notice" role="status">
+			Carte indisponible. Les photographies restent accessibles dans la liste. <button type="button" onclick={createMap}
+				>Réessayer la carte</button
+			>
+		</div>{/if}
+	{#if geolocationError}<div class="notice" role="status">
+			Position indisponible. Vérifiez l’autorisation de localisation du navigateur. <button
+				type="button"
+				onclick={() => (geolocationError = false)}>Masquer</button
+			>
+		</div>{/if}
+	{#if listOpen && archiveState === 'ready'}
+		<section id="archive-results" class="results" aria-label="Liste des lieux">
+			<h2>
+				{mapState === 'ready'
+					? `${visible.length} lieux dans la carte visible`
+					: `${visible.length} lieux de l’archive`}
+			</h2>
+			<p class="hint">Les nombres sur la carte indiquent des lieux, pas des images.</p>
+			{#if !visible.length && results.length}<p>
+					Aucun lieu dans cette zone. Déplacez la carte ou réduisez le zoom.
+				</p>{/if}
+			<ul>
+				{#each visible.slice(0, limit) as result (result.index)}<li>
+						<button
+							type="button"
+							onclick={() => select(result.location)}
+							aria-pressed={$selectedLocation === result.location}
+							><span>{locationLabel(result.location)}</span><small
+								>{result.years[0].year}–{result.years.at(-1).year} · {result.count} image{result.count !== 1
+									? 's'
+									: ''}</small
+							></button
+						>
+					</li>{/each}
+			</ul>
+			{#if visible.length > limit}<button type="button" class="more" onclick={() => (limit += 30)}
+					>Afficher plus de lieux</button
+				>{/if}
+		</section>
+	{/if}
+</div>
 
 <style>
+	.archive-tools {
+		position: absolute;
+		left: 12px;
+		top: 12px;
+		z-index: 3;
+		max-width: min(340px, calc(100% - 24px));
+		max-height: calc(100% - 24px);
+		display: flex;
+		flex-direction: column;
+		gap: 8px;
+		pointer-events: none;
+	}
+	.summary,
+	.notice,
+	.results {
+		background: #fff;
+		color: #000;
+		border: 1px solid #e4e4e4;
+		border-radius: 16px;
+		padding: 10px 12px;
+		font-size: 0.8rem;
+		pointer-events: auto;
+	}
+	.summary {
+		flex: none;
+	}
+	.notice {
+		flex-shrink: 0;
+	}
+	button {
+		cursor: pointer;
+		min-height: 36px;
+		text-decoration: underline;
+		text-underline-offset: 3px;
+	}
+	.summary button {
+		margin-left: 8px;
+	}
+	.results {
+		overflow: auto;
+		min-height: 0;
+	}
+	h2 {
+		font-weight: 700;
+		margin-bottom: 8px;
+	}
+	.hint {
+		color: #626262;
+		font-size: 0.75rem;
+		margin-bottom: 8px;
+	}
+	ul {
+		list-style: none;
+	}
+	li {
+		border-top: 1px solid #eee;
+	}
+	li button {
+		width: 100%;
+		text-align: left;
+		padding: 12px 0;
+		text-decoration: none;
+	}
+	li button[aria-pressed='true'] {
+		font-weight: 800;
+	}
+	small {
+		display: block;
+		color: #626262;
+		margin-top: 4px;
+	}
+	.more {
+		width: 100%;
+	}
+
 	:global(.maplibregl-ctrl-group) {
 		border-radius: 14px;
 		overflow: hidden;

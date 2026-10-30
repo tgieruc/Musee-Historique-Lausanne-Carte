@@ -1,142 +1,169 @@
 <script>
-	import { fly, fade } from 'svelte/transition';
+	import { onMount, untrack } from 'svelte';
 	import { selectedLocation, minYear, maxYear } from '$lib/stores/map.js';
+	import { dialog } from '$lib/actions/dialog.js';
 	import ImageGallery from './ImageGallery.svelte';
 
 	let isMobile = $state(false);
 	let selectedYear = $state(null);
-
+	let previousLocation;
+	let panel;
 	let location = $derived($selectedLocation);
-
 	let filteredYears = $derived(
-		location
-			? location.years
-					.filter((y) => {
-						const yr = parseInt(y.year);
-						return yr >= $minYear && yr <= $maxYear;
-					})
-					.sort((a, b) => parseInt(a.year) - parseInt(b.year))
-			: []
+		location?.years.filter((y) => +y.year >= $minYear && +y.year <= $maxYear).toSorted((a, b) => +a.year - +b.year) ||
+			[]
 	);
-
-	let selectedYearData = $derived(filteredYears.find((y) => y.year === selectedYear) || null);
-	let selectedYearImages = $derived(selectedYearData ? selectedYearData.images : []);
+	let images = $derived(filteredYears.find((y) => y.year === selectedYear)?.images || []);
 	let totalImages = $derived(filteredYears.reduce((sum, y) => sum + y.images.length, 0));
-
 	$effect(() => {
-		if (filteredYears.length > 0) {
-			selectedYear = filteredYears[0].year;
-		} else {
-			selectedYear = null;
+		const current = untrack(() => selectedYear);
+		if (location !== previousLocation) {
+			selectedYear = filteredYears[0]?.year ?? null;
+			previousLocation = location;
+			panel?.querySelector('[data-close]')?.focus();
+		} else if (!filteredYears.some((y) => y.year === current)) {
+			selectedYear =
+				filteredYears.toSorted((a, b) => Math.abs(+a.year - +current) - Math.abs(+b.year - +current))[0]?.year ?? null;
 		}
 	});
-
-	$effect(() => {
-		function checkMobile() {
-			isMobile = window.innerWidth < 768;
-		}
-		checkMobile();
-		window.addEventListener('resize', checkMobile);
-		return () => window.removeEventListener('resize', checkMobile);
+	onMount(() => {
+		const query = matchMedia('(max-width: 767px)');
+		isMobile = query.matches;
+		const change = () => (isMobile = query.matches);
+		query.addEventListener('change', change);
+		return () => query.removeEventListener('change', change);
 	});
-
 	function close() {
 		selectedLocation.set(null);
 	}
-
-	function handleKeydown(e) {
-		if (e.key === 'Escape') close();
+	function cancel(event) {
+		event.preventDefault();
+		close();
 	}
 </script>
 
-<svelte:window onkeydown={handleKeydown} />
-
-<!-- Backdrop -->
-<button
-	type="button"
-	aria-label="Fermer les photographies"
-	class="absolute inset-0 bg-black/15 z-10"
-	transition:fade={{ duration: 200 }}
-	onclick={close}
-></button>
-
-<!-- Panel -->
-<div
-	class="absolute z-20 bg-surface border-line shadow-xl shadow-black/5
-		{isMobile ? 'bottom-0 left-0 right-0 border-t rounded-t-3xl' : 'top-3 right-3 bottom-3 w-[460px] border rounded-3xl'}"
-	style={isMobile ? 'height: 80vh;' : ''}
-	transition:fly={isMobile ? { y: 300, duration: 250 } : { x: 480, duration: 250 }}
+<dialog
+	bind:this={panel}
+	use:dialog={isMobile}
+	class:mobile={isMobile}
+	aria-labelledby="photo-heading"
+	oncancel={cancel}
+	onkeydown={(e) => {
+		if (e.key === 'Escape' && !isMobile && e.target.closest('dialog') === panel) {
+			e.preventDefault();
+			close();
+		}
+	}}
 >
-	<!-- Mobile drag handle -->
-	{#if isMobile}
-		<div class="flex justify-center pt-2.5 pb-1">
-			<div class="w-9 h-1 rounded-full bg-muted/40"></div>
+	<header>
+		<div>
+			<h2 id="photo-heading">Photographies du lieu</h2>
+			<p aria-live="polite">
+				{totalImages} image{totalImages !== 1 ? 's' : ''}{selectedYear ? ` · ${selectedYear}` : ''}
+			</p>
 		</div>
-	{/if}
-
-	<div
-		class="px-4 pb-4 overflow-y-auto {isMobile ? 'pt-1' : 'pt-4'}"
-		style="height: {isMobile ? 'calc(100% - 1.5rem)' : '100%'};"
-	>
-		<!-- Header row -->
-		<div class="flex items-start justify-between mb-3">
-			<div>
-				<p class="text-xs text-muted font-sans">{totalImages} image{totalImages !== 1 ? 's' : ''}</p>
-				{#if filteredYears.length === 1}
-					<h2 class="text-2xl text-ink font-sans font-extrabold leading-tight">{filteredYears[0].year}</h2>
-				{:else if filteredYears.length > 1}
-					<h2 class="text-2xl text-ink font-sans font-extrabold leading-tight">
-						{filteredYears[0].year}–{filteredYears[filteredYears.length - 1].year}
-					</h2>
-				{:else}
-					<h2 class="text-2xl text-ink font-sans font-extrabold leading-tight">--</h2>
-				{/if}
-			</div>
-			<button
-				class="mt-1 w-10 h-10 rounded-full bg-surface-soft flex items-center justify-center text-muted hover:text-ink transition-all cursor-pointer"
-				onclick={close}
-				aria-label="Fermer"
-			>
-				<svg
-					xmlns="http://www.w3.org/2000/svg"
-					class="w-4 h-4"
-					fill="none"
-					viewBox="0 0 24 24"
-					stroke="currentColor"
-					stroke-width="2.5"
-				>
-					<path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-				</svg>
-			</button>
-		</div>
-
-		<!-- Year pills -->
-		{#if filteredYears.length > 1}
-			<div class="flex flex-wrap gap-1.5 mb-4">
-				{#each filteredYears as yearData (yearData.year)}
-					<button
-						class="rounded-full px-3 py-2 text-xs font-sans transition-all duration-150 cursor-pointer border
-							{yearData.year === selectedYear
-							? 'bg-ink text-surface border-ink'
-							: 'bg-transparent text-muted border-line hover:text-ink hover:border-ink/50'}"
-						onclick={() => (selectedYear = yearData.year)}
+		<button type="button" data-close onclick={close} aria-label="Fermer les photographies">×</button>
+	</header>
+	<div class="content">
+		{#if filteredYears.length > 0}
+			<div class="years" aria-label="Année des photographies">
+				{#each filteredYears as year (year.year)}
+					<button type="button" aria-pressed={selectedYear === year.year} onclick={() => (selectedYear = year.year)}
+						>{year.year} <span>({year.images.length})</span></button
 					>
-						{yearData.year}
-						<span class="text-[10px] opacity-60">({yearData.images.length})</span>
-					</button>
 				{/each}
 			</div>
-		{/if}
-
-		{#if filteredYears.length === 0}
-			<p class="text-sm text-muted italic font-sans">Aucune image pour cette periode.</p>
-		{/if}
-
-		<!-- Gallery -->
-		{#if selectedYearImages.length > 0 && selectedYear}
-			{#key selectedYear}
-				<ImageGallery images={selectedYearImages} />
+			{#key `${location.longitude},${location.latitude},${selectedYear}`}
+				<ImageGallery {images} />
 			{/key}
-		{/if}
+		{:else}<p role="status">
+				Aucune image pour cette période. Élargissez les dates pour retrouver les photographies de ce lieu.
+			</p>{/if}
 	</div>
-</div>
+</dialog>
+
+<style>
+	dialog {
+		position: absolute;
+		inset: 12px 12px 12px auto;
+		margin: 0;
+		width: min(460px, calc(100% - 24px));
+		max-width: none;
+		max-height: none;
+		height: calc(100% - 24px);
+		padding: 0;
+		border: 1px solid #e4e4e4;
+		border-radius: 24px;
+		background: #fff;
+		color: #000;
+		z-index: 20;
+		box-shadow: 0 6px 30px #0000000a;
+	}
+	dialog[open] {
+		display: flex;
+		flex-direction: column;
+	}
+	dialog.mobile {
+		position: fixed;
+		inset: auto 0 0;
+		width: 100%;
+		height: auto;
+		max-height: max(120px, calc(var(--map-height, 70dvh) - 12px));
+		border-radius: 24px 24px 0 0;
+	}
+	dialog::backdrop {
+		background: #0002;
+	}
+	header {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		gap: 12px;
+		padding: 16px;
+		flex: none;
+	}
+	h2 {
+		font-size: 1.05rem;
+		font-weight: 800;
+	}
+	p {
+		font-size: 0.85rem;
+		color: #626262;
+	}
+	header button {
+		width: 44px;
+		height: 44px;
+		flex: none;
+		border-radius: 50%;
+		background: #f6f6f6;
+		font-size: 24px;
+		cursor: pointer;
+	}
+	.content {
+		overflow: auto;
+		min-height: 0;
+		padding: 0 16px max(16px, env(safe-area-inset-bottom));
+	}
+	.years {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 6px;
+		margin-bottom: 16px;
+	}
+	.years button {
+		border: 1px solid #e4e4e4;
+		border-radius: 999px;
+		padding: 8px 12px;
+		min-height: 40px;
+		font-size: 0.8rem;
+		cursor: pointer;
+	}
+	.years button[aria-pressed='true'] {
+		background: #000;
+		color: #fff;
+		border-color: #000;
+	}
+	.years span {
+		opacity: 0.7;
+	}
+</style>

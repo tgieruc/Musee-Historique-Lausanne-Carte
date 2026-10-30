@@ -5,69 +5,58 @@
 	const YEAR_MIN = 1808;
 	const YEAR_MAX = 2009;
 
-	let localMin = $state($minYear);
-	let localMax = $state($maxYear);
-
-	function handleMinInput(e) {
-		const val = parseInt(e.target.value);
-		if (val <= localMax - 1) {
-			localMin = val;
-			minYear.set(val);
-		} else {
-			localMin = localMax - 1;
-			minYear.set(localMax - 1);
-			e.target.value = localMin;
+	let localMin = $derived($minYear);
+	let localMax = $derived($maxYear);
+	function changeYear(event, lower) {
+		const value = Number(event.target.value);
+		if (!Number.isInteger(value) || event.target.value === '') {
+			event.target.value = lower ? localMin : localMax;
+			return;
 		}
+		const year = Math.max(YEAR_MIN, Math.min(YEAR_MAX, value));
+		if (lower) minYear.set(Math.min(year, localMax));
+		else maxYear.set(Math.max(year, localMin));
+		event.target.value = lower ? $minYear : $maxYear;
 	}
-
-	function handleMaxInput(e) {
-		const val = parseInt(e.target.value);
-		if (val >= localMin + 1) {
-			localMax = val;
-			maxYear.set(val);
-		} else {
-			localMax = localMin + 1;
-			maxYear.set(localMin + 1);
-			e.target.value = localMax;
-		}
-	}
-
-	let rangePercent = $derived({
-		min: ((localMin - YEAR_MIN) / (YEAR_MAX - YEAR_MIN)) * 100,
-		max: ((localMax - YEAR_MIN) / (YEAR_MAX - YEAR_MIN)) * 100
-	});
 </script>
 
 <header class="map-header">
 	<div class="navigation">
 		<a href="/" class="brand"><img src={`${base}/raccoon.png`} alt="" width="28" height="28" />Theo Gieruc</a>
-		<nav aria-label="Navigation principale"><a href="/">Blog</a><a href="/mhl-carte/" aria-current="page">Map</a></nav>
+		<nav aria-label="Navigation principale">
+			<a href="/">Blog</a><a href="/mhl-carte/" aria-current="page">Carte</a>
+		</nav>
 	</div>
 	<div class="map-tools">
 		<h1>Lausanne, au fil du temps</h1>
 		<div class="year-filter" role="group" aria-label="Période des photographies">
-			<span>{localMin}</span>
-			<div class="range-slider">
-				<div class="track"></div>
-				<div class="track selected" style="left: {rangePercent.min}%; right: {100 - rangePercent.max}%;"></div>
-				<input
-					type="range"
-					min={YEAR_MIN}
-					max={YEAR_MAX}
-					value={localMin}
-					oninput={handleMinInput}
+			<label
+				>De <input
+					type="number"
 					aria-label="Année de début"
-				/>
-				<input
-					type="range"
 					min={YEAR_MIN}
+					max={localMax}
+					value={localMin}
+					onchange={(e) => changeYear(e, true)}
+				/></label
+			>
+			<label
+				>à <input
+					type="number"
+					aria-label="Année de fin"
+					min={localMin}
 					max={YEAR_MAX}
 					value={localMax}
-					oninput={handleMaxInput}
-					aria-label="Année de fin"
-				/>
-			</div>
-			<span>{localMax}</span>
+					onchange={(e) => changeYear(e, false)}
+				/></label
+			>
+			<button
+				type="button"
+				onclick={() => {
+					minYear.set(YEAR_MIN);
+					maxYear.set(YEAR_MAX);
+				}}>Tout</button
+			>
 		</div>
 	</div>
 </header>
@@ -131,66 +120,31 @@
 	.year-filter {
 		display: flex;
 		align-items: center;
-		gap: 0.8rem;
-		width: 290px;
+		gap: 10px;
 		font-size: 0.8rem;
-		font-variant-numeric: tabular-nums;
+		flex-wrap: wrap;
 	}
-	.range-slider {
-		position: relative;
-		flex: 1;
-		height: 36px;
+	label {
 		display: flex;
 		align-items: center;
-	}
-	.track {
-		position: absolute;
-		left: 0;
-		right: 0;
-		height: 3px;
-		background: #e4e4e4;
-		border-radius: 999px;
-	}
-	.selected {
-		background: #000;
+		gap: 6px;
 	}
 	input {
-		position: absolute;
-		inset: 0;
-		width: 100%;
-		appearance: none;
-		pointer-events: none;
-		background: transparent;
+		width: 80px;
+		border: 1px solid #e4e4e4;
+		border-radius: 10px;
+		padding: 8px;
+		min-height: 44px;
+		font-size: 16px;
+		background: #fff;
+		color: #000;
 	}
-	input::-webkit-slider-runnable-track {
-		height: 3px;
-		background: transparent;
-	}
-	input::-moz-range-track {
-		height: 3px;
-		background: transparent;
-	}
-	input::-webkit-slider-thumb {
-		appearance: none;
-		pointer-events: auto;
-		width: 20px;
-		height: 20px;
-		margin-top: -8.5px;
-		border-radius: 50%;
-		background: #000;
-		border: 3px solid #fff;
-		box-shadow: 0 0 0 1px #ddd;
-		cursor: grab;
-	}
-	input::-moz-range-thumb {
-		pointer-events: auto;
-		width: 14px;
-		height: 14px;
-		border-radius: 50%;
-		background: #000;
-		border: 3px solid #fff;
-		box-shadow: 0 0 0 1px #ddd;
-		cursor: grab;
+	.year-filter button {
+		min-height: 44px;
+		padding: 8px 10px;
+		border-radius: 999px;
+		background: #f6f6f6;
+		cursor: pointer;
 	}
 	@media (max-width: 600px) {
 		.navigation {

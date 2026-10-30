@@ -11,17 +11,20 @@ Interactive map displaying 15,766 historical photos from the [Musee Historique L
 ## Stack
 
 - **SvelteKit** with static adapter
-- **MapLibre GL** with CARTO Dark Matter basemap
+- **MapLibre GL** with CARTO Positron basemap
 - **Tailwind CSS v4**
 - PWA with offline support
 
 ## Features
 
 - Interactive map with clustered markers
-- Year range filter (1808-2009)
+- Inclusive year filter (1808-2009), including a single exact year
+- Keyboard-accessible list synchronized with visible map locations and dates
+- Loading, empty, and retry states for the archive, map, and images
 - Image gallery with lightbox and keyboard navigation
 - Links back to the museum's [Museris database](https://museris.lausanne.ch/)
-- Responsive drawer (side panel on desktop, bottom sheet on mobile)
+- Nonmodal desktop inspector and accessible modal mobile sheet
+- Focus restoration and topmost-only Escape dismissal
 
 ## Development
 
@@ -29,6 +32,16 @@ Interactive map displaying 15,766 historical photos from the [Musee Historique L
 npm install
 npm run dev
 ```
+
+## Checks
+
+```bash
+npm run check
+npm run test:ux
+npm run build
+```
+
+The UX suite uses Playwright with installed Google Chrome. It starts its own local server on port 4178 and uses deterministic archive/map fixtures, including simulated request failures. Tests cover keyboard focus, nested Escape, year preservation, exact-year filters, empty results, retry actions, and 320×568 / 844×390 layouts. Real archive imagery and basemap rendering still need a visual smoke check before release; physical-device and screen-reader testing are separate checks.
 
 The app is deployed as a static subfolder of [theogieruc.dev](https://theogieruc.dev).
 
