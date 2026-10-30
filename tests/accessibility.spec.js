@@ -45,12 +45,12 @@ async function setup(page, { dataFailure = false, mapFailure = false, imageFailu
 }
 async function openFirst(page) {
 	await expect(page.getByRole('searchbox')).toBeEnabled();
-	await page.getByRole('searchbox').focus();
+	await page.getByRole('searchbox').fill('Lausanne');
 	const result = page.locator('#archive-results li button').first();
 	await result.focus();
 	await page.keyboard.press('Enter');
 	await expect(page.getByRole('dialog', { name: 'Photographies du lieu' })).toBeVisible();
-	return result;
+	return page.getByRole('searchbox');
 }
 test('keyboard journey, topmost Escape, and focus restoration', async ({ page }) => {
 	await setup(page);
@@ -133,7 +133,7 @@ test('archive failure retries without reloading page', async ({ page }) => {
 	f.data = false;
 	await page.getByRole('button', { name: 'Réessayer l’archive' }).click();
 	await expect(page.getByRole('searchbox')).toBeEnabled();
-	await page.getByRole('searchbox').focus();
+	await page.getByRole('searchbox').fill('Lausanne');
 	await expect(page.locator('#archive-results li button').first()).toBeVisible();
 });
 test('basemap failure retains keyboard archive access and retry', async ({ page }) => {
@@ -175,6 +175,7 @@ test('search ignores accents, finds offscreen places, respects dates, and opens 
 	await page.getByRole('button', { name: 'Fermer les photographies', exact: true }).click();
 	await end.fill('1956');
 	await end.press('Tab');
+	await search.click();
 	await expect(page.getByText('Aucun résultat dans les descriptions pour cette période.')).toBeVisible();
 	await page.getByRole('button', { name: 'Chercher sur toutes les années' }).click();
 	await expect(page.locator('#archive-results li')).toHaveCount(2);
@@ -196,11 +197,14 @@ test('cancel search clears the filter, closes results, and allows reopening', as
 	await expect(page.locator('#archive-results')).toHaveCount(0);
 	await expect(search).toBeFocused();
 	await search.click();
-	await expect(page.locator('#archive-results')).toBeVisible();
+	await expect(page.locator('#archive-results')).toHaveCount(0);
 	await search.fill('cathedrale');
 	await search.press('Escape');
 	await expect(search).toHaveValue('');
 	await expect(page.locator('#archive-results')).toHaveCount(0);
+	await search.press('ArrowDown');
+	await expect(page.locator('#archive-results')).toHaveCount(0);
+	await search.fill('cathedrale');
 	await search.press('ArrowDown');
 	await expect(page.locator('#archive-results li button').first()).toBeFocused();
 });
@@ -241,14 +245,16 @@ test('viewer stays above drawer across responsive changes; Escape closes only vi
 	await expect(page.getByRole('dialog')).toHaveCount(0);
 });
 
-test('closing a changed selection restores focus to latest result', async ({ page }) => {
+test('closing a changed selection restores search focus without reopening results', async ({ page }) => {
 	await setup(page);
 	await page.getByRole('searchbox').fill('cathedrale');
 	const results = page.locator('#archive-results li button');
 	await results.nth(0).click();
+	await page.getByRole('searchbox').click();
 	await results.nth(1).click();
 	await page.getByRole('button', { name: 'Fermer les photographies' }).click();
-	await expect(results.nth(1)).toBeFocused();
+	await expect(page.getByRole('searchbox')).toBeFocused();
+	await expect(page.locator('#archive-results')).toHaveCount(0);
 });
 
 test('search scrolls to matching photo, including when same place and year stay selected', async ({ page }) => {
@@ -287,6 +293,7 @@ test('undated photos searchable without date filter; punctuation and empty recov
 	const start = page.getByRole('spinbutton', { name: 'Année de début' });
 	await start.fill('1809');
 	await start.press('Tab');
+	await search.click();
 	await expect(page.locator('#archive-results li')).toHaveCount(0);
 	await page.getByRole('button', { name: 'Chercher sur toutes les années' }).click();
 	await expect(page.locator('#archive-results li')).toHaveCount(1);
@@ -358,4 +365,21 @@ test('shared photo survives archive retry, works without basemap, and handles un
 	await expect(page.getByText('Cette photo est introuvable.', { exact: false })).toBeVisible();
 	await expect(page.getByRole('searchbox')).toBeEnabled();
 	await expect(page.locator('dialog')).toHaveCount(0);
+});
+
+test('empty search and shared-photo dismissal never show an automatic places list', async ({ page }) => {
+	await setup(page);
+	const search = page.getByRole('searchbox');
+	await search.click();
+	await search.press('Enter');
+	await expect(page.locator('#archive-results')).toHaveCount(0);
+	await search.fill('   ');
+	await expect(page.locator('#archive-results')).toHaveCount(0);
+	await page.goto('/mhl-carte/?image=4');
+	await expect(page.locator('dialog.viewer')).toBeVisible();
+	await page.keyboard.press('Escape');
+	await page.keyboard.press('Escape');
+	await expect(search).toBeFocused();
+	await expect(page.locator('#archive-results')).toHaveCount(0);
+	await expect(page.getByText('Lieux sur la carte', { exact: true })).toHaveCount(0);
 });
