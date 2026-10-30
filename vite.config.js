@@ -13,22 +13,23 @@ export default defineConfig({
 				name: 'Musee Historique de Lausanne - Carte',
 				short_name: 'MHL Carte',
 				description: 'Carte interactive des images historiques de Lausanne',
-				theme_color: '#000000',
-				background_color: '#000000',
+				theme_color: '#ffffff',
+				background_color: '#ffffff',
 				display: 'standalone',
 				scope: '/mhl-carte/',
 				start_url: '/mhl-carte/',
 				icons: [
 					{
-						src: 'favicon.svg',
-						sizes: 'any',
-						type: 'image/svg+xml',
+						src: 'icon-192.png',
+						sizes: '192x192',
+						type: 'image/png',
 						purpose: 'any'
-					}
+					},
+					{ src: 'icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'any' }
 				]
 			},
 			workbox: {
-				globPatterns: ['**/*.{js,css,html,json,svg,png}'],
+				globPatterns: ['**/*.{js,css,html,json,svg,png,ttf}'],
 				maximumFileSizeToCacheInBytes: 6 * 1024 * 1024
 			}
 		})

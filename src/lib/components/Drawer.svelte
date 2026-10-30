@@ -52,22 +52,21 @@
 <svelte:window onkeydown={handleKeydown} />
 
 <!-- Backdrop -->
-<!-- svelte-ignore a11y_no_static_element_interactions -->
-<div class="absolute inset-0 bg-black/50 z-10" transition:fade={{ duration: 200 }} onclick={close}></div>
+<button type="button" aria-label="Fermer les photographies" class="absolute inset-0 bg-black/15 z-10" transition:fade={{ duration: 200 }} onclick={close}></button>
 
 <!-- Panel -->
 <div
-	class="absolute z-20 bg-terminal-bg border-terminal-border shadow-[0_0_20px_rgba(0,255,255,0.08)]
+	class="absolute z-20 bg-surface border-line shadow-xl shadow-black/5
 		{isMobile
-		? 'bottom-0 left-0 right-0 border-t'
-		: 'top-0 right-0 bottom-0 w-[480px] border-l'}"
+		? 'bottom-0 left-0 right-0 border-t rounded-t-3xl'
+		: 'top-3 right-3 bottom-3 w-[460px] border rounded-3xl'}"
 	style={isMobile ? 'height: 80vh;' : ''}
 	transition:fly={isMobile ? { y: 300, duration: 250 } : { x: 480, duration: 250 }}
 >
 	<!-- Mobile drag handle -->
 	{#if isMobile}
 		<div class="flex justify-center pt-2.5 pb-1">
-			<div class="w-8 h-px bg-text-dim/40"></div>
+			<div class="w-9 h-1 rounded-full bg-muted/40"></div>
 		</div>
 	{/if}
 
@@ -75,19 +74,19 @@
 		<!-- Header row -->
 		<div class="flex items-start justify-between mb-3">
 			<div>
-				<p class="text-xs text-text-dim uppercase tracking-widest font-mono">{totalImages} image{totalImages !== 1 ? 's' : ''}</p>
+				<p class="text-xs text-muted  font-sans">{totalImages} image{totalImages !== 1 ? 's' : ''}</p>
 				{#if filteredYears.length === 1}
-					<h2 class="text-2xl text-accent-gold font-mono font-semibold leading-tight">{filteredYears[0].year}</h2>
+					<h2 class="text-2xl text-ink font-sans font-extrabold leading-tight">{filteredYears[0].year}</h2>
 				{:else if filteredYears.length > 1}
-					<h2 class="text-2xl text-accent-gold font-mono font-semibold leading-tight">
-						{filteredYears[0].year}--{filteredYears[filteredYears.length - 1].year}
+					<h2 class="text-2xl text-ink font-sans font-extrabold leading-tight">
+						{filteredYears[0].year}–{filteredYears[filteredYears.length - 1].year}
 					</h2>
 				{:else}
-					<h2 class="text-2xl text-accent-gold font-mono font-semibold leading-tight">--</h2>
+					<h2 class="text-2xl text-ink font-sans font-extrabold leading-tight">--</h2>
 				{/if}
 			</div>
 			<button
-				class="mt-1 w-7 h-7 flex items-center justify-center text-text-dim hover:text-accent-cyan transition-all cursor-pointer"
+				class="mt-1 w-10 h-10 rounded-full bg-surface-soft flex items-center justify-center text-muted hover:text-ink transition-all cursor-pointer"
 				onclick={close}
 				aria-label="Fermer"
 			>
@@ -102,10 +101,10 @@
 			<div class="flex flex-wrap gap-1.5 mb-4">
 				{#each filteredYears as yearData}
 					<button
-						class="px-2.5 py-1 text-xs font-mono transition-all duration-150 cursor-pointer border
+						class="rounded-full px-3 py-2 text-xs font-sans transition-all duration-150 cursor-pointer border
 							{yearData.year === selectedYear
-							? 'bg-accent-cyan/15 text-accent-cyan border-accent-cyan/50'
-							: 'bg-transparent text-text-dim border-terminal-border hover:text-text-gold hover:border-text-gold/50'}"
+							? 'bg-ink text-surface border-ink'
+							: 'bg-transparent text-muted border-line hover:text-ink hover:border-ink/50'}"
 						onclick={() => (selectedYear = yearData.year)}
 					>
 						{yearData.year}
@@ -116,7 +115,7 @@
 		{/if}
 
 		{#if filteredYears.length === 0}
-			<p class="text-sm text-text-dim italic font-mono">
+			<p class="text-sm text-muted italic font-sans">
 				Aucune image pour cette periode.
 			</p>
 		{/if}

@@ -35,7 +35,7 @@
 	onMount(() => {
 		const m = new maplibregl.Map({
 			container: mapContainer,
-			style: 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json',
+			style: 'https://basemaps.cartocdn.com/gl/positron-gl-style/style.json',
 			center: [6.6322734, 46.522935],
 			zoom: 14,
 			attributionControl: false
@@ -74,11 +74,11 @@
 				source: 'locations',
 				filter: ['has', 'point_count'],
 				paint: {
-					'circle-color': '#00FFFF',
-					'circle-radius': ['interpolate', ['linear'], ['get', 'point_count'], 2, 16, 50, 24, 200, 32],
-					'circle-opacity': 0.25,
-					'circle-stroke-width': 1,
-					'circle-stroke-color': '#00FFFF'
+					'circle-color': '#000000',
+					'circle-radius': ['interpolate', ['linear'], ['get', 'point_count'], 2, 13, 50, 21, 200, 28],
+					'circle-opacity': 1,
+					'circle-stroke-width': 3,
+					'circle-stroke-color': '#FFFFFF'
 				}
 			});
 
@@ -94,7 +94,7 @@
 					'text-font': ['Noto Sans Regular']
 				},
 				paint: {
-					'text-color': '#00FFFF'
+					'text-color': '#FFFFFF'
 				}
 			});
 
@@ -105,25 +105,11 @@
 				source: 'locations',
 				filter: ['!', ['has', 'point_count']],
 				paint: {
-					'circle-color': '#FFBF00',
-					'circle-radius': 5,
-					'circle-stroke-width': 1,
-					'circle-stroke-color': '#000000',
+					'circle-color': '#000000',
+					'circle-radius': 6,
+					'circle-stroke-width': 3,
+					'circle-stroke-color': '#FFFFFF',
 					'circle-opacity': 0.9
-				}
-			});
-
-			// Glow layer for individual markers
-			m.addLayer({
-				id: 'unclustered-glow',
-				type: 'circle',
-				source: 'locations',
-				filter: ['!', ['has', 'point_count']],
-				paint: {
-					'circle-color': '#FFBF00',
-					'circle-radius': 12,
-					'circle-opacity': 0.15,
-					'circle-blur': 1
 				}
 			});
 
@@ -197,32 +183,9 @@
 <div bind:this={mapContainer} class="absolute inset-0 w-full h-full"></div>
 
 <style>
-	:global(.maplibregl-ctrl-group) {
-		border-radius: 0 !important;
-		box-shadow: 0 0 8px rgba(0, 255, 255, 0.15) !important;
-		border: 1px solid #333 !important;
-		background: #0A0A0A !important;
-	}
-	:global(.maplibregl-ctrl-group button) {
-		width: 32px !important;
-		height: 32px !important;
-		background-color: #0A0A0A !important;
-		border-bottom-color: #333 !important;
-	}
-	:global(.maplibregl-ctrl-group button:hover) {
-		background-color: #1a1a1a !important;
-	}
-	:global(.maplibregl-ctrl-group button .maplibregl-ctrl-icon) {
-		filter: invert(1) !important;
-	}
-	:global(.maplibregl-ctrl-attrib) {
-		font-size: 10px !important;
-		font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace !important;
-		background: rgba(0, 0, 0, 0.8) !important;
-		color: #8A8A8A !important;
-		backdrop-filter: blur(4px) !important;
-	}
-	:global(.maplibregl-ctrl-attrib a) {
-		color: #8A8A8A !important;
-	}
+  :global(.maplibregl-ctrl-group) { border-radius: 14px; overflow: hidden; box-shadow: 0 2px 10px #0000000a; border: 1px solid #e4e4e4; background: #fff; }
+  :global(.maplibregl-ctrl-group button) { width: 40px; height: 40px; background-color: #fff; }
+  :global(.maplibregl-ctrl-group button:hover) { background-color: #f6f6f6; }
+  :global(.maplibregl-ctrl-attrib) { font-size: 11px; font-family: 'Nunito Sans', sans-serif; background: #ffffffed; color: #626262; }
+  :global(.maplibregl-ctrl-attrib a) { color: #626262; }
 </style>

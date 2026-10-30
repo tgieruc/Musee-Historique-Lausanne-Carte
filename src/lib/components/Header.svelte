@@ -1,4 +1,5 @@
 <script>
+	import { base } from '$app/paths';
 	import { minYear, maxYear } from '$lib/stores/map.js';
 
 	const YEAR_MIN = 1808;
@@ -37,105 +38,44 @@
 	});
 </script>
 
-<header class="bg-terminal-bg/95 backdrop-blur-sm border-b border-terminal-border px-3 py-2 md:px-5 md:py-2.5 font-mono relative z-30">
-	<div class="flex items-center gap-3 md:gap-5">
-		<a href="/" class="text-accent-gold text-sm md:text-base tracking-[0.05em] uppercase font-semibold whitespace-nowrap leading-none hover:text-accent-gold no-underline">
-			Theo Gieruc
-		</a>
-
-		<nav class="flex items-center gap-3 md:gap-6">
-			<a href="/" class="text-text-dim text-xs md:text-sm uppercase tracking-[0.08em] hover:text-accent-cyan no-underline">Blog</a>
-			<a href="/mhl-carte/" class="text-accent-cyan text-xs md:text-sm uppercase tracking-[0.08em] no-underline">Map</a>
-			<a href="https://github.com/tgieruc" class="text-text-dim text-xs md:text-sm uppercase tracking-[0.08em] hover:text-accent-cyan no-underline">GitHub</a>
-		</nav>
-
-		<div class="w-px h-4 bg-terminal-border hidden md:block"></div>
-
-		<div class="flex-1 flex items-center gap-2.5 max-w-xs">
-			<span class="text-accent-orange text-xs tabular-nums leading-none tracking-wide">{localMin}</span>
-
-			<div class="range-slider relative h-5 flex-1 flex items-center">
-				<div class="absolute inset-x-0 h-px rounded-full bg-terminal-border"></div>
-				<div
-					class="absolute h-px rounded-full bg-accent-cyan"
-					style="left: {rangePercent.min}%; right: {100 - rangePercent.max}%;"
-				></div>
-				<input
-					type="range"
-					min={YEAR_MIN}
-					max={YEAR_MAX}
-					value={localMin}
-					oninput={handleMinInput}
-					class="range-thumb absolute inset-0 w-full pointer-events-none appearance-none bg-transparent"
-					aria-label="Annee de debut"
-				/>
-				<input
-					type="range"
-					min={YEAR_MIN}
-					max={YEAR_MAX}
-					value={localMax}
-					oninput={handleMaxInput}
-					class="range-thumb absolute inset-0 w-full pointer-events-none appearance-none bg-transparent"
-					aria-label="Annee de fin"
-				/>
-			</div>
-
-			<span class="text-accent-orange text-xs tabular-nums leading-none tracking-wide">{localMax}</span>
-		</div>
-	</div>
+<header class="map-header">
+  <div class="navigation">
+    <a href="/" class="brand"><img src={`${base}/raccoon.png`} alt="" width="28" height="28" />Theo Gieruc</a>
+    <nav aria-label="Navigation principale"><a href="/">Blog</a><a href="/mhl-carte/" aria-current="page">Map</a></nav>
+  </div>
+  <div class="map-tools">
+    <h1>Lausanne, au fil du temps</h1>
+    <div class="year-filter" role="group" aria-label="Période des photographies">
+      <span>{localMin}</span>
+      <div class="range-slider">
+        <div class="track"></div>
+        <div class="track selected" style="left: {rangePercent.min}%; right: {100 - rangePercent.max}%;"></div>
+        <input type="range" min={YEAR_MIN} max={YEAR_MAX} value={localMin} oninput={handleMinInput} aria-label="Année de début" />
+        <input type="range" min={YEAR_MIN} max={YEAR_MAX} value={localMax} oninput={handleMaxInput} aria-label="Année de fin" />
+      </div>
+      <span>{localMax}</span>
+    </div>
+  </div>
 </header>
 
 <style>
-	.range-thumb::-webkit-slider-runnable-track {
-		-webkit-appearance: none;
-		appearance: none;
-		height: 1px;
-		background: transparent;
-	}
-
-	.range-thumb::-moz-range-track {
-		appearance: none;
-		height: 1px;
-		background: transparent;
-	}
-
-	.range-thumb::-webkit-slider-thumb {
-		-webkit-appearance: none;
-		appearance: none;
-		pointer-events: auto;
-		width: 12px;
-		height: 12px;
-		border-radius: 0;
-		background: var(--color-accent-cyan);
-		border: 1px solid var(--color-terminal-bg);
-		box-shadow: 0 0 6px rgba(0, 255, 255, 0.4);
-		cursor: pointer;
-		margin-top: -5px;
-		transition: box-shadow 0.15s ease, background 0.15s ease;
-	}
-
-	.range-thumb::-moz-range-thumb {
-		appearance: none;
-		pointer-events: auto;
-		width: 12px;
-		height: 12px;
-		border-radius: 0;
-		background: var(--color-accent-cyan);
-		border: 1px solid var(--color-terminal-bg);
-		box-shadow: 0 0 6px rgba(0, 255, 255, 0.4);
-		cursor: pointer;
-		transition: box-shadow 0.15s ease, background 0.15s ease;
-	}
-
-	.range-thumb::-webkit-slider-thumb:hover,
-	.range-thumb::-webkit-slider-thumb:active {
-		background: var(--color-text-bright);
-		box-shadow: 0 0 10px rgba(0, 255, 255, 0.7);
-	}
-
-	.range-thumb::-moz-range-thumb:hover,
-	.range-thumb::-moz-range-thumb:active {
-		background: var(--color-text-bright);
-		box-shadow: 0 0 10px rgba(0, 255, 255, 0.7);
-	}
+.map-header { background: #fff; border-bottom: 1px solid #e4e4e4; position: relative; z-index: 5; }
+.navigation { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 1.15rem 1.5rem; }
+.brand { display: inline-flex; align-items: center; gap: .65rem; color: #000; font-weight: 800; font-size: 1.1rem; letter-spacing: -.03em; text-decoration: none; }
+.brand img { width: 28px; height: 28px; }
+nav { display: flex; gap: .3rem; }
+nav a { padding: .45rem .9rem; border-radius: 999px; font-size: .85rem; color: #626262; text-decoration: none; }
+nav a[aria-current] { background: #000; color: #fff; }
+.map-tools { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: .75rem 2rem; padding: .8rem 1.5rem; border-top: 1px solid #eee; }
+h1 { font-weight: 800; font-size: 1rem; }
+.year-filter { display: flex; align-items: center; gap: .8rem; width: 290px; font-size: .8rem; font-variant-numeric: tabular-nums; }
+.range-slider { position: relative; flex: 1; height: 36px; display: flex; align-items: center; }
+.track { position: absolute; left: 0; right: 0; height: 3px; background: #e4e4e4; border-radius: 999px; }
+.selected { background: #000; }
+input { position: absolute; inset: 0; width: 100%; appearance: none; pointer-events: none; background: transparent; }
+input::-webkit-slider-runnable-track { height: 3px; background: transparent; }
+input::-moz-range-track { height: 3px; background: transparent; }
+input::-webkit-slider-thumb { appearance: none; pointer-events: auto; width: 20px; height: 20px; margin-top: -8.5px; border-radius: 50%; background: #000; border: 3px solid #fff; box-shadow: 0 0 0 1px #ddd; cursor: grab; }
+input::-moz-range-thumb { pointer-events: auto; width: 14px; height: 14px; border-radius: 50%; background: #000; border: 3px solid #fff; box-shadow: 0 0 0 1px #ddd; cursor: grab; }
+@media(max-width: 600px) { .navigation { padding: .9rem 1.1rem; } .map-tools { padding: .65rem 1.1rem; gap: .25rem; } .year-filter { width: 100%; } .brand { font-size: 1rem; } }
 </style>

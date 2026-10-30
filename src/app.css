@@ -1,45 +1,24 @@
 @import 'tailwindcss';
 
+@font-face {
+  font-family: 'Nunito Sans';
+  src: url('./lib/assets/nunito-sans.ttf') format('truetype');
+  font-style: normal;
+  font-weight: 200 900;
+  font-display: swap;
+}
 @theme {
-	--color-terminal-bg: #000000;
-	--color-terminal-bg-light: #0A0A0A;
-	--color-terminal-border: #333333;
-	--color-text-gold: #E9CC7A;
-	--color-text-bright: #FFF2C2;
-	--color-text-dim: #8A8A8A;
-	--color-accent-cyan: #00FFFF;
-	--color-accent-cyan-hover: #66FFFF;
-	--color-accent-gold: #FFBF00;
-	--color-accent-orange: #FF6600;
-	--color-accent-green: #00A645;
-	--font-mono: 'SF Mono', 'Fira Code', 'Consolas', 'Monaco', monospace;
+  --color-surface: #ffffff;
+  --color-surface-soft: #f6f6f6;
+  --color-line: #e4e4e4;
+  --color-ink: #000000;
+  --color-muted: #626262;
+  --font-sans: 'Nunito Sans', system-ui, sans-serif;
 }
-
-body {
-	font-family: var(--font-mono);
-	background-color: var(--color-terminal-bg);
-	color: var(--color-text-gold);
-	position: relative;
-}
-
-/* Scanline overlay for CRT feel */
-body::after {
-	content: '';
-	position: fixed;
-	inset: 0;
-	pointer-events: none;
-	z-index: 9999;
-	background: repeating-linear-gradient(
-		0deg,
-		transparent,
-		transparent 2px,
-		rgba(0, 0, 0, 0.15) 2px,
-		rgba(0, 0, 0, 0.15) 4px
-	);
-	opacity: 0.3;
-}
-
-::selection {
-	background: #003366AA;
-	color: #E9F7FF;
+:root { color-scheme: light; }
+body { font-family: var(--font-sans); background: var(--color-surface); color: var(--color-ink); }
+::selection { background: #ddd; color: #000; }
+:focus-visible { outline: 2px solid #000; outline-offset: 3px; }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
 }
