@@ -19,6 +19,32 @@
 	let controller;
 	let disposed = false;
 	let mapTimer;
+	let sharedPhotoHandled = false;
+	let sharedPhotoError = $state(false);
+	let sharedLocation = $state.raw(null);
+	function openSharedPhoto() {
+		if (sharedPhotoHandled) return;
+		sharedPhotoHandled = true;
+		const id = new URL(window.location.href).searchParams.get('image');
+		if (id === null) return;
+		for (const location of data) {
+			for (const year of location.years) {
+				const image = year.images.find((image) => String(image.id) === id);
+				if (!image) continue;
+				resetDates();
+				selectionRequest.set({ location, year: year.year, image: image.id, open: true, opener: searchInput });
+				selectedLocation.set(location);
+				sharedLocation = location;
+				return;
+			}
+		}
+		sharedPhotoError = true;
+	}
+	$effect(() => {
+		if (!sharedLocation || !map || mapState !== 'ready') return;
+		map.jumpTo({ center: [sharedLocation.longitude, sharedLocation.latitude], zoom: 16 });
+		sharedLocation = null;
+	});
 	let results = $derived(matchingLocations(data, $minYear, $maxYear));
 	let searched = $derived(searchLocations(results, query));
 	let visible = $derived(
@@ -59,6 +85,7 @@
 			if (disposed || controller !== request) return;
 			data = json;
 			archiveState = 'ready';
+			openSharedPhoto();
 		} catch {
 			if (!disposed && controller === request) archiveState = 'error';
 		} finally {
@@ -293,6 +320,12 @@
 
 <div bind:this={mapContainer} class="absolute inset-0 w-full h-full"></div>
 <div class="archive-tools">
+	{#if sharedPhotoError}<div class="notice" role="status">
+			Cette photo est introuvable. Vous pouvez explorer les autres photographies. <button
+				type="button"
+				onclick={() => (sharedPhotoError = false)}>Masquer</button
+			>
+		</div>{/if}
 	<form
 		class="search"
 		role="search"

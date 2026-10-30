@@ -9,6 +9,7 @@
 	let selectedYear = $state(null);
 	let previousLocation;
 	let previousRequest;
+	let openedRequest = $state.raw(null);
 	let panel;
 	let backdropStart = false;
 	let location = $derived($selectedLocation);
@@ -102,7 +103,12 @@
 				{/each}
 			</div>
 			{#key `${location.longitude},${location.latitude},${selectedYear}`}
-				<ImageGallery {images} targetImage={$selectionRequest?.image} />
+				<ImageGallery
+					{images}
+					targetImage={$selectionRequest?.image}
+					openImage={$selectionRequest?.open && $selectionRequest !== openedRequest ? $selectionRequest.image : null}
+					onOpened={() => (openedRequest = $selectionRequest)}
+				/>
 			{/key}
 		{:else}<p role="status">
 				Aucune image pour cette période. Élargissez les dates pour retrouver les photographies de ce lieu.

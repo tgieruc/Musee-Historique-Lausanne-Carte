@@ -1,8 +1,9 @@
 <script>
-	import { tick } from 'svelte';
+	import { tick, untrack } from 'svelte';
 	import { dialog } from '$lib/actions/dialog.js';
 	import ArchiveImage from './ArchiveImage.svelte';
-	let { images, targetImage } = $props();
+	import PhotoShare from './PhotoShare.svelte';
+	let { images, targetImage, openImage, onOpened } = $props();
 	let gallery;
 	$effect(() => {
 		const id = targetImage;
@@ -14,6 +15,13 @@
 		});
 	});
 	let lightboxIndex = $state(null);
+	$effect(() => {
+		const index = images.findIndex((image) => String(image.id) === String(openImage));
+		if (openImage != null && index >= 0) {
+			lightboxIndex = index;
+			untrack(() => onOpened?.());
+		}
+	});
 	let active = $derived(lightboxIndex === null ? null : images[lightboxIndex]);
 	const source = (image) =>
 		`https://museris.lausanne.ch/SGCM/Consultation.aspx?id=${image.id}&Source=search_result.aspx`;
@@ -34,6 +42,7 @@
 				<a href={source(image)} target="_blank" rel="noopener noreferrer"
 					>Notice du musée <span class="sr-only">(nouvel onglet)</span></a
 				>
+				<PhotoShare {image} />
 			</div>
 		</article>
 	{/each}
@@ -79,6 +88,7 @@
 			<a href={source(active)} target="_blank" rel="noopener noreferrer"
 				>Notice du musée <span class="sr-only">(nouvel onglet)</span></a
 			>
+			{#key active.id}<PhotoShare image={active} />{/key}
 		</div>
 	</dialog>
 {/if}

@@ -311,3 +311,51 @@ test('visible stalled image times out and retry keeps focus', async ({ page }) =
 	await expect(photo).toBeFocused();
 	await expect(page.getByText('Chargement de l’image…')).toHaveCount(0);
 });
+
+test('photo links open exact image on fresh load and reload, without reopening after close', async ({ page }) => {
+	await setup(page);
+	await page.goto('/mhl-carte/?image=4');
+	await expect(page.getByRole('dialog', { name: 'Image 2 sur 2', exact: true })).toBeVisible();
+	await page.reload();
+	await expect(page.getByRole('dialog', { name: 'Image 2 sur 2', exact: true })).toBeVisible();
+	await page.keyboard.press('Escape');
+	await expect(page.locator('dialog.viewer')).toHaveCount(0);
+	await page.getByRole('button', { name: '1903 (1)', exact: true }).click();
+	await page.getByRole('button', { name: '1959 (2)', exact: true }).click();
+	await expect(page.locator('dialog.viewer')).toHaveCount(0);
+});
+
+test('copy shares only active image; clipboard denial offers selectable link', async ({ page, context }) => {
+	await context.grantPermissions(['clipboard-read', 'clipboard-write']);
+	await setup(page);
+	await page.goto('/mhl-carte/?image=3');
+	const viewer = page.locator('dialog.viewer');
+	await viewer.getByRole('button', { name: 'Suivante' }).click();
+	await viewer.getByRole('button', { name: 'Copier le lien' }).click();
+	const link = await page.evaluate(() => navigator.clipboard.readText());
+	expect(link).toBe('http://127.0.0.1:4178/mhl-carte/?image=4');
+	await expect(viewer.getByText('Lien copié', { exact: true })).toBeVisible();
+	await page.evaluate(() => {
+		navigator.clipboard.writeText = async () => {
+			throw new Error('Denied');
+		};
+	});
+	await viewer.getByRole('button', { name: 'Copier le lien' }).click();
+	await expect(viewer.getByRole('textbox', { name: 'Lien de la photo' })).toHaveValue(link);
+	await expect(viewer.getByRole('textbox', { name: 'Lien de la photo' })).toBeFocused();
+});
+
+test('shared photo survives archive retry, works without basemap, and handles unknown IDs', async ({ page }) => {
+	const failures = await setup(page, { dataFailure: true, mapFailure: true });
+	await page.goto('/mhl-carte/?image=6');
+	await expect(page.getByRole('button', { name: 'Réessayer l’archive' })).toBeVisible();
+	failures.data = false;
+	await page.getByRole('button', { name: 'Réessayer l’archive' }).click();
+	await expect(page.getByRole('dialog', { name: 'Image 1 sur 1', exact: true })).toBeVisible();
+	await page.keyboard.press('Escape');
+	await expect(page.getByRole('button', { name: 'Date inconnue (1)' })).toHaveAttribute('aria-pressed', 'true');
+	await page.goto('/mhl-carte/?image=does-not-exist');
+	await expect(page.getByText('Cette photo est introuvable.', { exact: false })).toBeVisible();
+	await expect(page.getByRole('searchbox')).toBeEnabled();
+	await expect(page.locator('dialog')).toHaveCount(0);
+});
