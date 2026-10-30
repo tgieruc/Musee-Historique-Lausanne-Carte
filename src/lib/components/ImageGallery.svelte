@@ -1,7 +1,18 @@
 <script>
+	import { tick } from 'svelte';
 	import { dialog } from '$lib/actions/dialog.js';
 	import ArchiveImage from './ArchiveImage.svelte';
-	let { images } = $props();
+	let { images, targetImage } = $props();
+	let gallery;
+	$effect(() => {
+		const id = targetImage;
+		if (id == null) return;
+		tick().then(() => {
+			const card = [...(gallery?.querySelectorAll('article') || [])].find((el) => el.dataset.image === String(id));
+			const content = gallery?.closest('.content');
+			if (card && content) content.scrollTop += card.getBoundingClientRect().top - content.getBoundingClientRect().top;
+		});
+	});
 	let lightboxIndex = $state(null);
 	let active = $derived(lightboxIndex === null ? null : images[lightboxIndex]);
 	const source = (image) =>
@@ -14,9 +25,9 @@
 	}
 </script>
 
-<div class="gallery">
+<div class="gallery" bind:this={gallery}>
 	{#each images as image, i (image.id)}
-		<article class="photo-card">
+		<article class="photo-card" data-image={image.id}>
 			<ArchiveImage {image} onopen={() => (lightboxIndex = i)} label={`Agrandir l’image ${i + 1}`} />
 			<div class="caption">
 				{#if image.description}<p>{image.description}</p>{/if}
@@ -34,6 +45,7 @@
 		aria-labelledby="viewer-title"
 		oncancel={(e) => {
 			e.preventDefault();
+			e.stopPropagation();
 			close();
 		}}
 		onkeydown={(e) => {

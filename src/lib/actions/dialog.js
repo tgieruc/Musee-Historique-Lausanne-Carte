@@ -1,7 +1,7 @@
 // Native modal dialogs provide focus containment and make background content inert.
 export function dialog(node, modal) {
-	const opener = document.activeElement;
-	let isModal = modal;
+	let opener = document.activeElement;
+	let isModal;
 	function containTab(event) {
 		if (!isModal || event.key !== 'Tab' || event.target.closest('dialog') !== node) return;
 		const controls = [
@@ -20,12 +20,26 @@ export function dialog(node, modal) {
 		}
 	}
 	node.addEventListener('keydown', containTab);
-	function open(nextModal) {
+	function open(options) {
+		const nextModal = typeof options === 'boolean' ? options : options.modal;
+		if (options?.opener) opener = options.opener;
+		if (node.open && nextModal === isModal) return;
+		const focused = document.activeElement;
+		const children = [...node.querySelectorAll('dialog[open]')].map((child) => ({
+			child,
+			modal: child.matches(':modal')
+		}));
+		for (const { child } of children.toReversed()) child.close();
 		isModal = nextModal;
 		if (node.open) node.close();
 		if (isModal) node.showModal();
 		else node.show();
-		node.querySelector('[data-close]')?.focus();
+		for (const { child, modal } of children) {
+			if (modal) child.showModal();
+			else child.show();
+		}
+		if (children.length && focused?.isConnected) focused.focus({ preventScroll: true });
+		else node.querySelector('[data-close]')?.focus();
 	}
 	open(modal);
 	return {

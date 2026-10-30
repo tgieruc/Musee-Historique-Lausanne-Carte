@@ -2,6 +2,7 @@
 	import { onMount, untrack } from 'svelte';
 	import { selectedLocation, selectionRequest, minYear, maxYear } from '$lib/stores/map.js';
 	import { dialog } from '$lib/actions/dialog.js';
+	import { yearMatches, yearLabel } from '$lib/archive.js';
 	import ImageGallery from './ImageGallery.svelte';
 
 	let isMobile = $state(false);
@@ -9,10 +10,10 @@
 	let previousLocation;
 	let previousRequest;
 	let panel;
+	let backdropStart = false;
 	let location = $derived($selectedLocation);
 	let filteredYears = $derived(
-		location?.years.filter((y) => +y.year >= $minYear && +y.year <= $maxYear).toSorted((a, b) => +a.year - +b.year) ||
-			[]
+		location?.years.filter((y) => yearMatches(y.year, $minYear, $maxYear)).toSorted((a, b) => +a.year - +b.year) || []
 	);
 	let images = $derived(filteredYears.find((y) => y.year === selectedYear)?.images || []);
 	let totalImages = $derived(filteredYears.reduce((sum, y) => sum + y.images.length, 0));
@@ -48,6 +49,7 @@
 		selectedLocation.set(null);
 	}
 	function cancel(event) {
+		if (event.target !== panel) return;
 		event.preventDefault();
 		close();
 	}
@@ -55,10 +57,25 @@
 
 <dialog
 	bind:this={panel}
-	use:dialog={isMobile}
+	use:dialog={{ modal: isMobile, opener: $selectionRequest?.opener }}
 	class:mobile={isMobile}
 	aria-labelledby="photo-heading"
 	oncancel={cancel}
+	onpointerdown={(e) => {
+		const r = panel.getBoundingClientRect();
+		backdropStart =
+			e.target === panel && (e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom);
+	}}
+	onpointerup={(e) => {
+		const r = panel.getBoundingClientRect();
+		if (
+			backdropStart &&
+			e.target === panel &&
+			(e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom)
+		)
+			close();
+		backdropStart = false;
+	}}
 	onkeydown={(e) => {
 		if (e.key === 'Escape' && !isMobile && e.target.closest('dialog') === panel) {
 			e.preventDefault();
@@ -70,7 +87,7 @@
 		<div>
 			<h2 id="photo-heading">Photographies du lieu</h2>
 			<p aria-live="polite">
-				{totalImages} image{totalImages !== 1 ? 's' : ''}{selectedYear ? ` · ${selectedYear}` : ''}
+				{totalImages} image{totalImages !== 1 ? 's' : ''}{selectedYear ? ` · ${yearLabel(selectedYear)}` : ''}
 			</p>
 		</div>
 		<button type="button" data-close onclick={close} aria-label="Fermer les photographies">×</button>
@@ -80,12 +97,12 @@
 			<div class="years" aria-label="Année des photographies">
 				{#each filteredYears as year (year.year)}
 					<button type="button" aria-pressed={selectedYear === year.year} onclick={() => (selectedYear = year.year)}
-						>{year.year} <span>({year.images.length})</span></button
+						>{yearLabel(year.year)} <span>({year.images.length})</span></button
 					>
 				{/each}
 			</div>
 			{#key `${location.longitude},${location.latitude},${selectedYear}`}
-				<ImageGallery {images} />
+				<ImageGallery {images} targetImage={$selectionRequest?.image} />
 			{/key}
 		{:else}<p role="status">
 				Aucune image pour cette période. Élargissez les dates pour retrouver les photographies de ce lieu.

@@ -1,6 +1,18 @@
+export function yearMatches(year, min, max) {
+	return (+year >= min && +year <= max) || (year === 'Unknown' && min === 1808 && max === 2009);
+}
+export const yearLabel = (year) => (year === 'Unknown' ? 'Date inconnue' : year);
+export function yearsLabel(years) {
+	const dated = years
+		.filter((y) => y.year !== 'Unknown')
+		.map((y) => +y.year)
+		.sort((a, b) => a - b);
+	const label = dated.length ? (dated[0] === dated.at(-1) ? `${dated[0]}` : `${dated[0]}–${dated.at(-1)}`) : '';
+	return [label, years.some((y) => y.year === 'Unknown') ? 'Date inconnue' : ''].filter(Boolean).join(' · ');
+}
 export function matchingLocations(data, min, max) {
 	return data.flatMap((location, index) => {
-		const years = location.years.filter((y) => +y.year >= min && +y.year <= max);
+		const years = location.years.filter((y) => yearMatches(y.year, min, max));
 		return years.length ? [{ location, index, years, count: years.reduce((n, y) => n + y.images.length, 0) }] : [];
 	});
 }
@@ -32,7 +44,7 @@ function normalize(text) {
 const captions = new WeakMap();
 export function searchLocations(results, query) {
 	const phrase = normalize(query);
-	if (!phrase) return results;
+	if (!phrase) return query.trim() ? [] : results;
 	const words = phrase.split(/\s+/);
 	return results
 		.flatMap((result) => {
@@ -53,7 +65,8 @@ export function searchLocations(results, query) {
 						(offset ? '…' : '') +
 						image.description.slice(offset, offset + 190) +
 						(offset + 190 < image.description.length ? '…' : '');
-					if (!best || score > best.score) best = { ...result, caption: excerpt, matchYear: year.year, score };
+					if (!best || score > best.score)
+						best = { ...result, caption: excerpt, matchYear: year.year, matchImage: image.id, score };
 				}
 			return best ? [best] : [];
 		})

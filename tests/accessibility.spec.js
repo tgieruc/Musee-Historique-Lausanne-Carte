@@ -204,3 +204,110 @@ test('cancel search clears the filter, closes results, and allows reopening', as
 	await search.press('ArrowDown');
 	await expect(page.locator('#archive-results li button').first()).toBeFocused();
 });
+
+test('blank map click closes photos while dragging preserves selection', async ({ page }) => {
+	await setup(page);
+	await openFirst(page);
+	const canvas = page.locator('.maplibregl-canvas');
+	const box = await canvas.boundingBox();
+	await page.mouse.move(box.x + 430, box.y + 300);
+	await page.mouse.down();
+	await page.mouse.move(box.x + 470, box.y + 340, { steps: 8 });
+	await page.mouse.up();
+	await expect(page.getByRole('dialog')).toHaveCount(1);
+	await canvas.click({ position: { x: 450, y: 400 } });
+	await expect(page.getByRole('dialog')).toHaveCount(0);
+});
+
+test('viewer stays above drawer across responsive changes; Escape closes only viewer', async ({ page }) => {
+	await setup(page);
+	await openFirst(page);
+	await page.getByRole('button', { name: 'Agrandir l’image 1' }).click();
+	for (const width of [390, 1200, 390]) {
+		await page.setViewportSize({ width, height: 844 });
+		const close = page.getByRole('button', { name: 'Fermer la visionneuse' });
+		await expect(close).toBeFocused();
+		expect(
+			await close.evaluate((el) => {
+				const r = el.getBoundingClientRect();
+				return el.contains(document.elementFromPoint(r.x + r.width / 2, r.y + r.height / 2));
+			})
+		).toBe(true);
+	}
+	await page.keyboard.press('Escape');
+	await expect(page.getByRole('dialog')).toHaveCount(1);
+	await expect(page.getByRole('button', { name: 'Agrandir l’image 1' })).toBeFocused();
+	await page.keyboard.press('Escape');
+	await expect(page.getByRole('dialog')).toHaveCount(0);
+});
+
+test('closing a changed selection restores focus to latest result', async ({ page }) => {
+	await setup(page);
+	await page.getByRole('searchbox').fill('cathedrale');
+	const results = page.locator('#archive-results li button');
+	await results.nth(0).click();
+	await results.nth(1).click();
+	await page.getByRole('button', { name: 'Fermer les photographies' }).click();
+	await expect(results.nth(1)).toBeFocused();
+});
+
+test('search scrolls to matching photo, including when same place and year stay selected', async ({ page }) => {
+	await setup(page);
+	await page.route('**/data.json', (r) =>
+		r.fulfill({
+			json: [
+				{
+					...archive[0],
+					years: [{ year: '1959', images: [image(1, 'Alpha'), image(2, 'Beta'), image(3, 'Unique cible')] }]
+				}
+			]
+		})
+	);
+	await page.reload();
+	const search = page.getByRole('searchbox');
+	await search.fill('Alpha');
+	await page.locator('#archive-results li button').click();
+	await search.fill('Unique cible');
+	await page.locator('#archive-results li button').click();
+	await expect.poll(() => page.locator('.content').evaluate((el) => el.scrollTop)).toBeGreaterThan(0);
+	await expect(page.getByRole('button', { name: 'Agrandir l’image 3' })).toBeInViewport();
+});
+
+test('undated photos searchable without date filter; punctuation and empty recovery are honest', async ({ page }) => {
+	await setup(page);
+	await page.route('**/data.json', (r) =>
+		r.fulfill({ json: [{ ...archive[0], years: [{ year: 'Unknown', images: [image(6, 'Zèbre')] }] }] })
+	);
+	await page.reload();
+	const search = page.getByRole('searchbox');
+	await search.fill('zebre');
+	await page.locator('#archive-results li button').click();
+	await expect(page.getByRole('button', { name: 'Date inconnue (1)' })).toHaveAttribute('aria-pressed', 'true');
+	await page.getByRole('button', { name: 'Fermer les photographies' }).click();
+	const start = page.getByRole('spinbutton', { name: 'Année de début' });
+	await start.fill('1809');
+	await start.press('Tab');
+	await expect(page.locator('#archive-results li')).toHaveCount(0);
+	await page.getByRole('button', { name: 'Chercher sur toutes les années' }).click();
+	await expect(page.locator('#archive-results li')).toHaveCount(1);
+	await search.fill('!!!');
+	await expect(page.locator('#archive-results li')).toHaveCount(0);
+	await expect(page.getByRole('button', { name: 'Chercher sur toutes les années' })).toHaveCount(0);
+});
+
+test('visible stalled image times out and retry keeps focus', async ({ page }) => {
+	await setup(page);
+	await page.route('https://images.example.test/**', () => {});
+	await page.clock.install();
+	await openFirst(page);
+	await expect(page.getByText('Chargement de l’image…')).toBeVisible();
+	await page.waitForTimeout(1000);
+	await page.clock.fastForward(21000);
+	const retry = page.getByRole('button', { name: 'Réessayer l’image' });
+	await expect(retry).toBeVisible();
+	await page.route('https://images.example.test/**', (r) => r.fulfill({ body: png, contentType: 'image/png' }));
+	await retry.click();
+	const photo = page.getByRole('button', { name: 'Agrandir l’image 1' });
+	await expect(photo).toBeFocused();
+	await expect(page.getByText('Chargement de l’image…')).toHaveCount(0);
+});

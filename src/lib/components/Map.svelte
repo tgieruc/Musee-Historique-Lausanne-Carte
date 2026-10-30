@@ -4,7 +4,7 @@
 	import 'maplibre-gl/dist/maplibre-gl.css';
 	import { base } from '$app/paths';
 	import { minYear, maxYear, selectedLocation, selectionRequest } from '$lib/stores/map.js';
-	import { matchingLocations, featureCollection, locationLabel, searchLocations } from '$lib/archive.js';
+	import { matchingLocations, featureCollection, locationLabel, searchLocations, yearsLabel } from '$lib/archive.js';
 	let mapContainer;
 	let map = $state.raw(null);
 	let data = $state.raw([]);
@@ -213,11 +213,16 @@
 				const loc = data[idx];
 				if (loc) {
 					m.getCanvas().focus();
-					selectionRequest.set(null);
+					selectionRequest.set({ location: loc, opener: m.getCanvas() });
 					selectedLocation.set(loc);
 				}
 			});
 		}
+
+		m.on('click', (e) => {
+			if (!m.queryRenderedFeatures(e.point, { layers: ['clusters', 'unclustered-point', 'unclustered-hit'] }).length)
+				selectedLocation.set(null);
+		});
 
 		// Cursor
 		for (const layer of ['clusters', 'unclustered-point', 'unclustered-hit']) {
@@ -260,7 +265,12 @@
 		maxYear.set(2009);
 	}
 	function select(result) {
-		selectionRequest.set({ location: result.location, year: result.matchYear ?? null });
+		selectionRequest.set({
+			location: result.location,
+			year: result.matchYear ?? null,
+			image: result.matchImage,
+			opener: document.activeElement
+		});
 		selectedLocation.set(result.location);
 		if (map && mapState === 'ready' && query.trim()) {
 			const width = mapContainer.clientWidth;
@@ -350,7 +360,9 @@
 						: 'Lieux de l’archive'}
 			</h2>
 			{#if query.trim() && !visible.length}<p>Aucun résultat dans les descriptions pour cette période.</p>
-				<button type="button" onclick={resetDates}>Chercher sur toutes les années</button>
+				{#if $minYear !== 1808 || $maxYear !== 2009}<button type="button" onclick={resetDates}
+						>Chercher sur toutes les années</button
+					>{:else}<p>Essayez un autre mot ou un nom de lieu.</p>{/if}
 			{:else if !visible.length && results.length}<p>
 					Aucun lieu dans cette zone. Déplacez la carte ou réduisez le zoom.
 				</p>{/if}
@@ -358,9 +370,7 @@
 				{#each visible.slice(0, limit) as result (result.index)}<li>
 						<button type="button" onclick={() => select(result)} aria-pressed={$selectedLocation === result.location}
 							><span>{result.caption || locationLabel(result.location)}</span><small
-								>{result.years[0].year}–{result.years.at(-1).year} · {result.count} image{result.count !== 1
-									? 's'
-									: ''}</small
+								>{yearsLabel(result.years)} · {result.count} image{result.count !== 1 ? 's' : ''}</small
 							></button
 						>
 					</li>{/each}
